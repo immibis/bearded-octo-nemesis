@@ -108,8 +108,8 @@ public class Main {
 			
 			Main m = new Main();
 			m.base = new File(MCP_BASE);
-			m.input = new File("test.zip");
-			m.output = new File("test-deobf.zip");
+			m.input = new File("C:\\users\\alex\\mcp2\\tech-1.2.5\\lib\\obf\\industrialcraft-2-client_1.95b.jar");
+			m.output = new File("C:\\users\\alex\\mcp2\\tech-1.2.5\\jars\\mods\\industrialcraft-2-client_1.95b.jar");
 			m.exc = new ExcFile(new File(m.base, "conf/client.exc"));
 			m.srg = new SrgFile(new File(m.base, "conf/client.srg"));
 			m.fields = new CsvFile(new File(m.base, "conf/fields.csv"), CLIENT, false);

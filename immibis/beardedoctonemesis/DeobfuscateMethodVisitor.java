@@ -30,8 +30,8 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		String deobfOwner = main.srg.getClassName(owner);
 		String seargeName = main.srg.getFieldName(owner, name);
 		String deobfName = main.fields.get(seargeName);
-		desc = main.deobfTypeDescriptor(desc);
-		super.visitFieldInsn(opcode, deobfOwner, deobfName, desc);
+		String deobfDesc = main.deobfTypeDescriptor(desc);
+		super.visitFieldInsn(opcode, deobfOwner, deobfName, deobfDesc);
 	}
 	public void 	visitFrame(int type, int nLocal, Object[] local, int nStack, Object[] stack) {
 		for(int k = 0; k < local.length; k++)
@@ -92,8 +92,11 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		desc = main.deobfMethodDescriptor(desc);
 		
 		String deobfName = main.methods.get(seargeName);
+		if(deobfName == null)
+			deobfName = seargeName;
+		
 		owner = main.srg.getClassName(owner);
-		super.visitMethodInsn(opcode, owner, name, desc);
+		super.visitMethodInsn(opcode, owner, deobfName, desc);
 	}
 	public void 	visitMultiANewArrayInsn(String desc, int dims) {
 		desc = main.deobfTypeDescriptor(desc);
