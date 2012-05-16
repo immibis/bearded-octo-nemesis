@@ -19,8 +19,19 @@ public class SrgFile {
 	}
 	
 	public String getClassName(String obf) {
+		if(obf == null)
+			return null;
+
+		// Check the class mapping list
 		String r = classes.get(obf);
-		return r == null ? obf : r;
+		if(r != null)
+			return r;
+
+		// Fix certain packages in net/minecraft/src
+		if(!obf.contains("/") || obf.startsWith("forge/"))
+			return "net/minecraft/src/" + obf;
+		
+		return obf;
 	}
 	public String getFieldName(String clazz, String obf) {
 		String r = fields.get(clazz + "/" + obf);

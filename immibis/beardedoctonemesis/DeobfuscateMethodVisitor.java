@@ -62,6 +62,11 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		super.visitLabel(label);
 	}
 	public void 	visitLdcInsn(Object cst) {
+		if(cst instanceof Type) {
+			String desc = ((Type) cst).getDescriptor();
+			if(desc.charAt(0) == 'L' && desc.charAt(desc.length() - 1) == ';')
+				cst = Type.getType("L" + main.srg.getClassName(desc.substring(1, desc.length() - 1)) + ";");
+		}
 		super.visitLdcInsn(cst);
 	}
 	public void 	visitLineNumber(int line, Label start) {

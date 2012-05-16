@@ -60,6 +60,8 @@ public class Main {
 			String oldName = fileToClass(inEntry.getName());
 			String newName = srg.getClassName(oldName);
 			
+			System.out.println(oldName+" -> "+newName);
+			
 			try {
 			
 				ClassReader cr = new ClassReader(inZip);
@@ -125,12 +127,12 @@ public class Main {
 			int side = Integer.parseInt(args[6]);
 			Main m = new Main();
 			m.base = new File(".");
-			m.input = new File(m.base, args[0]);
+			m.input = new File(/*m.base, */args[0]);
 			m.output = new File(args[1]);
-			m.exc = new ExcFile(new File(m.base, args[2]));
-			m.srg = new SrgFile(new File(m.base, args[3]));
-			m.fields = new CsvFile(new File(m.base, args[4]), side, reob);
-			m.methods = new CsvFile(new File(m.base, args[5]), side, reob);
+			m.exc = new ExcFile(new File(/*m.base, */args[2]));
+			m.srg = new SrgFile(new File(/*m.base, */args[3]));
+			m.fields = new CsvFile(new File(/*m.base, */args[4]), side, reob);
+			m.methods = new CsvFile(new File(/*m.base, */args[5]), side, reob);
 			m.run();
 		}
 	}
