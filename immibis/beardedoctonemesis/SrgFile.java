@@ -6,12 +6,7 @@ import java.util.*;
 public class SrgFile {
 	private Map<String, String> classes = new HashMap<String, String>();
 	private Map<String, String> fields = new HashMap<String, String>();
-	private Map<String, MethodInfo> methods = new HashMap<String, MethodInfo>();
-	
-	public static class MethodInfo {
-		public String name;
-		public String desc;
-	}
+	private Map<String, String> methods = new HashMap<String, String>();
 	
 	private static String getLastComponent(String s) {
 		String[] parts = s.split("/");
@@ -21,6 +16,9 @@ public class SrgFile {
 	public String getClassName(String obf) {
 		if(obf == null)
 			return null;
+		
+		if(obf.charAt(0) == '[')
+			return main.deobfTypeDescriptor(obf);
 
 		// Check the class mapping list
 		String r = classes.get(obf);
@@ -34,19 +32,14 @@ public class SrgFile {
 		return obf;
 	}
 	public String getFieldName(String clazz, String obf) {
-		String r = fields.get(clazz + "/" + obf);
-		return r == null ? obf : r;
+		return fields.get(clazz + "/" + obf);
 	}
-	public MethodInfo getMethod(String clazz, String obf, String desc) {
-		MethodInfo r = methods.get(clazz + "/" + obf + desc);
-		if(r == null) {
-			r = new MethodInfo();
-			r.name = obf;
-			r.desc = desc;
-		}
-		return r;
+	public String getMethod(String clazz, String obf, String desc) {
+		return methods.get(clazz + "/" + obf + desc);
 	}
-	public SrgFile(File f) throws IOException {
+	private Main main;
+	public SrgFile(File f, Main m) throws IOException {
+		this.main = m;
 		Scanner in = new Scanner(f);
 		try {
 			while(in.hasNextLine()) {
@@ -66,10 +59,7 @@ public class SrgFile {
 					String obfdesc = in.next();
 					String deobf = in.next();
 					String deobfdesc = in.next();
-					MethodInfo mi = new MethodInfo();
-					mi.desc = deobfdesc;
-					mi.name = getLastComponent(deobf);
-					methods.put(obf + obfdesc, mi);
+					methods.put(obf + obfdesc, getLastComponent(deobf));
 				} else {
 					in.nextLine();
 				}

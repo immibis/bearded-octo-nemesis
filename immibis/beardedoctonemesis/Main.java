@@ -1,6 +1,7 @@
 package immibis.beardedoctonemesis;
 
 import java.io.*;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -19,6 +20,9 @@ public class Main {
 	public ExcFile exc;
 	public SrgFile srg;
 	public CsvFile fields, methods;
+	public String[] xpathlist;
+	
+	public Map<String, Set<String>> supers = new HashMap<String, Set<String>>();
 	
 	// returns an internal name (with /'s and $'s)
 	public static String fileToClass(String fn) {
@@ -30,9 +34,42 @@ public class Main {
 		return cn+".class";
 	}
 	
+	private void getParents(File f) throws IOException {
+		ZipInputStream inZip = new ZipInputStream(new FileInputStream(f));
+		while(true) {
+			ZipEntry inEntry = inZip.getNextEntry();
+			if(inEntry == null)
+				break;
+			if(!inEntry.getName().endsWith(".class"))
+				continue;
+			
+			GetParentVisitor gpv = new GetParentVisitor();
+			
+			try {
+				ClassReader cr = new ClassReader(inZip);
+				cr.accept(gpv, 0);
+				inZip.closeEntry();
+			} catch(GetParentVisitor.FinishedException e) {
+			}
+			
+			Set<String> inheritsFrom = new HashSet<String>();
+			inheritsFrom.add(gpv.parent);
+			for(String s : gpv.interfaces)
+				inheritsFrom.add(s);
+			supers.put(gpv.name, inheritsFrom);
+		}
+		inZip.close();
+	}
+	
 	public void run() throws IOException {
-		ZipInputStream inZip = new ZipInputStream(new FileInputStream(input));
+		ZipInputStream inZip;
 		ZipOutputStream outZip = new ZipOutputStream(new FileOutputStream(output));
+		
+		for(String xpath : xpathlist)
+			getParents(new File(xpath));
+		getParents(input);
+		
+		inZip = new ZipInputStream(new FileInputStream(input));
 		
 		while(true) {
 			ZipEntry inEntry = inZip.getNextEntry();
@@ -60,15 +97,16 @@ public class Main {
 			String oldName = fileToClass(inEntry.getName());
 			String newName = srg.getClassName(oldName);
 			
-			System.out.println(oldName+" -> "+newName);
+			//if(oldName.contains("$"))
+				//System.out.println(oldName+" -> "+newName);
 			
 			try {
 			
 				ClassReader cr = new ClassReader(inZip);
-				inZip.closeEntry();
 				
 				ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 				cr.accept(new DeobfuscateVisitor(cw, this), 0);
+				inZip.closeEntry();
 				
 				ZipEntry outEntry = new ZipEntry(classToFile(newName));
 				outZip.putNextEntry(outEntry);
@@ -108,16 +146,19 @@ public class Main {
 			
 			Main m = new Main();
 			m.base = new File(MCP_BASE);
-			m.input = new File("C:\\users\\alex\\mcp2\\tech-1.2.5\\lib\\obf\\industrialcraft-2-client_1.95b.jar");
-			m.output = new File("C:\\users\\alex\\mcp2\\tech-1.2.5\\jars\\mods\\industrialcraft-2-client_1.95b.jar");
+			m.input = new File("C:\\users\\alex\\mcp2\\tech-1.2.5\\lib\\obf\\RedPowerCore-2.0pr5b1.zip");
+			m.output = new File("C:\\users\\alex\\mcp2\\tech-1.2.5\\jars\\mods\\RedPowerCore-2.0pr5b1.zip");
 			m.exc = new ExcFile(new File(m.base, "conf/client.exc"));
-			m.srg = new SrgFile(new File(m.base, "conf/client.srg"));
+			m.srg = new SrgFile(new File(m.base, "conf/client.srg"), m);
 			m.fields = new CsvFile(new File(m.base, "conf/fields.csv"), CLIENT, false);
 			m.methods = new CsvFile(new File(m.base, "conf/methods.csv"), CLIENT, false);
+			m.xpathlist = new String[] {"C:\\users\\alex\\mcp2\\tech-1.2.5\\jars\\bin\\minecraft.jar"};
 			m.run();
 		} else {
-			if(args.length != 8 || (!args[7].equals("deob") && !args[7].equals("reob"))) {
-				System.err.println("Arguments: <input file> <output file> <exc file> <srg file> <fields.csv> <methods.csv> <side number> [deob/reob]");
+			if((args.length != 8 && args.length != 9) || (!args[7].equals("deob") && !args[7].equals("reob"))) {
+				System.err.println("Arguments: <input file> <output file> <exc file> <srg file> <fields.csv> <methods.csv> <side number> [deob|reob] [xpath]");
+				System.err.println("  xpath is a "+File.pathSeparator+"-separated list of extra jar files to use, you normally need at least the");
+				System.err.println("  minecraft jar here or it won't deobfuscate mods correctly.");
 				return;
 			}
 			boolean reob = args[7].equals("reob");
@@ -130,9 +171,10 @@ public class Main {
 			m.input = new File(/*m.base, */args[0]);
 			m.output = new File(args[1]);
 			m.exc = new ExcFile(new File(/*m.base, */args[2]));
-			m.srg = new SrgFile(new File(/*m.base, */args[3]));
+			m.srg = new SrgFile(new File(/*m.base, */args[3]), m);
 			m.fields = new CsvFile(new File(/*m.base, */args[4]), side, reob);
 			m.methods = new CsvFile(new File(/*m.base, */args[5]), side, reob);
+			m.xpathlist = (args.length < 9 ? "" : args[8]).split(File.pathSeparator);
 			m.run();
 		}
 	}
@@ -175,6 +217,55 @@ public class Main {
 			}
 		}
 		return out;
+	}
+	
+	public String lookupInheritedMethod(String owner, String name, String desc) {
+		return lookupInheritedMethod(owner, name, desc, false);
+	}
+	
+	public String lookupInheritedField(String owner, String name) {
+		return lookupInheritedField(owner, name, false);
+	}
+
+	public String lookupInheritedMethod(String owner, String name, String desc, boolean verbose) {
+		String deobf = srg.getMethod(owner, name, desc);
+		if(deobf != null) {
+			if(verbose)
+				System.out.println(owner+"/"+name+desc+" -> "+deobf);
+			return deobf;
+		}
+		Set<String> inherits = supers.get(owner);
+		//if(owner.contains("RubLeaves"))
+			//verbose = true;
+		if(verbose)
+			System.out.println(owner+"/"+name+desc+" inherits from "+inherits);
+		if(inherits != null) {
+			for(String s : inherits) {
+				deobf = lookupInheritedMethod(s, name, desc, verbose);
+				if(deobf != null && !deobf.equals(name))
+					return deobf;
+			}
+		}
+		return name;
+	}
+	
+	public String lookupInheritedField(String owner, String name, boolean verbose) {
+		String smi = srg.getFieldName(owner, name);
+		if(smi != null)
+			return smi;
+		//if(name.equals("bN"))// && owner.contains("BlockIC2Door"))
+			//verbose = true;
+		Set<String> inherits = supers.get(owner);
+		if(verbose)
+			System.out.println(owner+"/"+name+" inherits from "+inherits);
+		if(inherits != null) {
+			for(String s : inherits) {
+				smi = lookupInheritedField(s, name, verbose);
+				if(smi != null && !smi.equals(name))
+					return smi;
+			}
+		}
+		return name;
 	}
 	
 }

@@ -28,7 +28,7 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 	}
 	public void 	visitFieldInsn(int opcode, String owner, String name, String desc) {
 		String deobfOwner = main.srg.getClassName(owner);
-		String seargeName = main.srg.getFieldName(owner, name);
+		String seargeName = main.lookupInheritedField(owner, name);
 		String deobfName = main.fields.get(seargeName);
 		String deobfDesc = main.deobfTypeDescriptor(desc);
 		super.visitFieldInsn(opcode, deobfOwner, deobfName, deobfDesc);
@@ -63,9 +63,7 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 	}
 	public void 	visitLdcInsn(Object cst) {
 		if(cst instanceof Type) {
-			String desc = ((Type) cst).getDescriptor();
-			if(desc.charAt(0) == 'L' && desc.charAt(desc.length() - 1) == ';')
-				cst = Type.getType("L" + main.srg.getClassName(desc.substring(1, desc.length() - 1)) + ";");
+			cst = Type.getType(main.deobfTypeDescriptor(((Type) cst).getDescriptor()));
 		}
 		super.visitLdcInsn(cst);
 	}
@@ -83,8 +81,7 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		super.visitMaxs(maxStack, maxLocals);
 	}
 	public void 	visitMethodInsn(int opcode, String owner, String name, String desc) {
-		SrgFile.MethodInfo smi = main.srg.getMethod(owner, name, desc);
-		String seargeName = smi.name;
+		String seargeName = main.lookupInheritedMethod(owner, name, desc);
 		//if(!smi.desc.equals(main.deobfMethodDescriptor(desc)))
 		//	throw new RuntimeException("Method descriptor mismatch, SRG: "+smi.desc+", Main: "+main.deobfMethodDescriptor(desc));
 		
@@ -112,7 +109,10 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		super.visitTryCatchBlock(start, end, handler, type);
 	}
 	public void 	visitTypeInsn(int opcode, String type) {
-		super.visitTypeInsn(opcode, main.srg.getClassName(type));
+		String deobf = type.charAt(0) == '[' ? main.deobfTypeDescriptor(type) : main.srg.getClassName(type);
+		//if(type.contains("$"))
+		//	System.out.println(type+" -> "+deobf);
+		super.visitTypeInsn(opcode, deobf);
 	}
 	public void 	visitVarInsn(int opcode, int var) {
 		super.visitVarInsn(opcode, var);

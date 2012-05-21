@@ -52,7 +52,7 @@ public class DeobfuscateVisitor extends ClassVisitor {
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
     	String seargeName = main.srg.getFieldName(obfname, name);
-    	String deobfName = main.fields.get(seargeName);
+    	String deobfName = seargeName == null ? name : main.fields.get(seargeName);
         return super.visitField(access, deobfName, main.deobfTypeDescriptor(desc), signature, value);
     }
 
@@ -63,10 +63,9 @@ public class DeobfuscateVisitor extends ClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-    	SrgFile.MethodInfo smi = main.srg.getMethod(obfname, name, desc);
-    	String deobfName = main.methods.get(smi.name);
+    	String seargeName = main.lookupInheritedMethod(obfname, name, desc);
+    	String deobfName = main.methods.get(seargeName);
     	
-    	//desc = smi.desc;
     	desc = main.deobfMethodDescriptor(desc);
     	
     	if(exceptions == null)
