@@ -1,19 +1,16 @@
-package immibis.beardedoctonemesis;
+package immibis.beardedoctonemesis.mcp;
 
 import java.io.*;
 import java.util.*;
 
 public class ExcFile {
-	private Map<String, Map<String, String[]>> exceptions = new HashMap<String, Map<String, String[]>>();
+	public Map<String, String[]> exceptions = new HashMap<String, String[]>();
 	
 	private static String[] EMPTY_STRING_ARRAY = new String[0];
 	
 	// returns internal names, can return null
 	public String[] getExceptionClasses(String clazz, String func, String desc) {
-		Map<String, String[]> map = exceptions.get(clazz);
-		if(map == null)
-			return EMPTY_STRING_ARRAY;
-		String[] r = map.get(func);
+		String[] r = exceptions.get(clazz + "/" + func + desc);
 		if(r == null)
 			return EMPTY_STRING_ARRAY;
 		return r;
@@ -32,11 +29,6 @@ public class ExcFile {
 				}
 				in.useDelimiter("\\.");
 				String clazz = in.next();
-				Map<String, String[]> classmap = exceptions.get(clazz);
-				if(classmap == null) {
-					classmap = new HashMap<String, String[]>();
-					exceptions.put(clazz, classmap);
-				}
 				in.useDelimiter("\\(");
 				String func = in.next().substring(1);
 				in.useDelimiter("=");
@@ -44,7 +36,7 @@ public class ExcFile {
 				in.useDelimiter("\\|");
 				String excs = in.next().substring(1);
 				in.nextLine(); // skip rest of line
-				classmap.put(func + desc, excs.split(","));
+				exceptions.put(clazz + "/" + func + desc, excs.split(","));
 			}
 		} finally {
 			in.close();

@@ -14,7 +14,8 @@ import org.objectweb.asm.Opcodes;
 public class DeobfuscateVisitor extends ClassVisitor {
 	
 	private Main main;
-	private String obfname;
+	private String inClassName;
+	private String outClassName;
 	
 	public DeobfuscateVisitor(ClassVisitor base, Main main) {
 		super(Opcodes.ASM4, base);
@@ -23,15 +24,16 @@ public class DeobfuscateVisitor extends ClassVisitor {
 	
 	@Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-		obfname = name;
+		inClassName = name;
+		outClassName = main.map.getClass(name);
 		for(int k = 0; k < interfaces.length; k++)
-			interfaces[k] = main.srg.getClassName(interfaces[k]);
-        super.visit(version, access, main.srg.getClassName(name), signature, main.srg.getClassName(superName), interfaces);
+			interfaces[k] = main.map.getClass(interfaces[k]);
+        super.visit(version, access, outClassName, signature, main.map.getClass(superName), interfaces);
     }
     
     @Override
     public void visitOuterClass(String owner, String name, String desc) {
-        super.visitOuterClass(main.srg.getClassName(owner), main.srg.getClassName(name), desc);
+        super.visitOuterClass(main.map.getClass(owner), main.map.getClass(name), desc);
     }
 
     @Override
@@ -51,8 +53,7 @@ public class DeobfuscateVisitor extends ClassVisitor {
     
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-    	String seargeName = main.srg.getFieldName(obfname, name);
-    	String deobfName = seargeName == null ? name : main.fields.get(seargeName);
+    	String deobfName = main.deobfField(inClassName, name);
         return super.visitField(access, deobfName, main.deobfTypeDescriptor(desc), signature, value);
     }
 
@@ -63,19 +64,21 @@ public class DeobfuscateVisitor extends ClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-    	String seargeName = main.lookupInheritedMethod(obfname, name, desc);
-    	String deobfName = main.methods.get(seargeName);
+    	String deobfName = main.lookupInheritedMethod(inClassName, name, desc);
     	
     	desc = main.deobfMethodDescriptor(desc);
     	
     	if(exceptions == null)
     		exceptions = new String[0];
     	
-    	String[] addExceptions = main.exc.getExceptionClasses(obfname, name, desc);
     	List<String> newExceptions = new LinkedList<String>(Arrays.asList(exceptions));
-    	newExceptions.addAll(Arrays.asList(addExceptions));
+    	newExceptions.addAll(main.map.getExceptions(inClassName, name, desc));
     	
-        return new DeobfuscateMethodVisitor(super.visitMethod(access, deobfName, desc, signature, (String[])newExceptions.toArray(new String[newExceptions.size()])), main);
+        return new DeobfuscateMethodVisitor(
+        		super.visitMethod(access, deobfName, desc, signature,
+        				(String[])newExceptions.toArray(new String[newExceptions.size()])),
+        		main,
+        		inClassName);
     }
 
     @Override

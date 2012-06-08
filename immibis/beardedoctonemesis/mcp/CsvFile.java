@@ -1,12 +1,11 @@
-package immibis.beardedoctonemesis;
+package immibis.beardedoctonemesis.mcp;
 
 import java.io.*;
 import java.util.*;
 
-public class CsvFile {
-	private Map<String, String> data = new HashMap<String, String>();
-	
-	public CsvFile(File f, int n_side, boolean reob) throws IOException {
+public abstract class CsvFile {
+	public static Map<String, String> read(File f, int n_side) throws IOException {
+		Map<String, String> data = new HashMap<String, String>();
 		Scanner in = new Scanner(f);
 		String s_side = String.valueOf(n_side);
 		try {
@@ -23,10 +22,6 @@ public class CsvFile {
 		} finally {
 			in.close();
 		}
-	}
-
-	public String get(String seargeName) {
-		String r = data.get(seargeName);
-		return r == null ? seargeName : r;
+		return data;
 	}
 }

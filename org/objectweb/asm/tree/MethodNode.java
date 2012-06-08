@@ -263,7 +263,8 @@ public class MethodNode extends MethodVisitor {
     // Implementation of the MethodVisitor abstract class
     // ------------------------------------------------------------------------
 
-    @Override
+    @SuppressWarnings("serial")
+	@Override
     public AnnotationVisitor visitAnnotationDefault() {
         return new AnnotationNode(new ArrayList<Object>(0) {
             @Override
@@ -294,7 +295,8 @@ public class MethodNode extends MethodVisitor {
         return an;
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public AnnotationVisitor visitParameterAnnotation(
         final int parameter,
         final String desc,

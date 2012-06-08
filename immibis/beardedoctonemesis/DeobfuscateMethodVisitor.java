@@ -5,10 +5,12 @@ import org.objectweb.asm.*;
 public class DeobfuscateMethodVisitor extends MethodVisitor {
 	
 	private Main main;
+	//private String inClassName;
 
-	public DeobfuscateMethodVisitor(MethodVisitor base, Main main) {
+	public DeobfuscateMethodVisitor(MethodVisitor base, Main main, String inClassName) {
 		super(Opcodes.ASM4, base);
 		this.main = main;
+		//this.inClassName = inClassName;
 	}
 	
 	public AnnotationVisitor 	visitAnnotation(String desc, boolean visible) {
@@ -27,19 +29,18 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		super.visitEnd();
 	}
 	public void 	visitFieldInsn(int opcode, String owner, String name, String desc) {
-		String deobfOwner = main.srg.getClassName(owner);
-		String seargeName = main.lookupInheritedField(owner, name);
-		String deobfName = main.fields.get(seargeName);
-		String deobfDesc = main.deobfTypeDescriptor(desc);
-		super.visitFieldInsn(opcode, deobfOwner, deobfName, deobfDesc);
+		String outOwner = main.map.getClass(owner);
+		String outName = main.lookupInheritedField(owner, name);
+		String outDesc = main.deobfTypeDescriptor(desc);
+		super.visitFieldInsn(opcode, outOwner, outName, outDesc);
 	}
 	public void 	visitFrame(int type, int nLocal, Object[] local, int nStack, Object[] stack) {
 		for(int k = 0; k < local.length; k++)
 			if(local[k] instanceof String)
-				local[k] = main.srg.getClassName((String)local[k]);
+				local[k] = main.map.getClass((String)local[k]);
 		for(int k = 0; k < stack.length; k++)
 			if(stack[k] instanceof String)
-				stack[k] = main.srg.getClassName((String)stack[k]);
+				stack[k] = main.map.getClass((String)stack[k]);
 		super.visitFrame(type, nLocal, local, nStack, stack);
 	}
 	public void 	visitIincInsn(int var, int increment) {
@@ -81,23 +82,15 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		super.visitMaxs(maxStack, maxLocals);
 	}
 	public void 	visitMethodInsn(int opcode, String owner, String name, String desc) {
-		String seargeName = main.lookupInheritedMethod(owner, name, desc);
-		//if(!smi.desc.equals(main.deobfMethodDescriptor(desc)))
-		//	throw new RuntimeException("Method descriptor mismatch, SRG: "+smi.desc+", Main: "+main.deobfMethodDescriptor(desc));
-		
-		//desc = smi.desc;
-		desc = main.deobfMethodDescriptor(desc);
-		
-		String deobfName = main.methods.get(seargeName);
-		if(deobfName == null)
-			deobfName = seargeName;
-		
-		owner = main.srg.getClassName(owner);
-		super.visitMethodInsn(opcode, owner, deobfName, desc);
+		if(main.map.getClass(owner).contains("EnumMobType"))
+			throw new RuntimeException("boom '"+owner+"' -> '"+main.map.getClass(owner)+"'");
+		super.visitMethodInsn(opcode,
+				main.map.getClass(owner),
+				main.lookupInheritedMethod(owner, name, desc),
+				main.deobfMethodDescriptor(desc));
 	}
 	public void 	visitMultiANewArrayInsn(String desc, int dims) {
-		desc = main.deobfTypeDescriptor(desc);
-		super.visitMultiANewArrayInsn(desc, dims);
+		super.visitMultiANewArrayInsn(main.deobfTypeDescriptor(desc), dims);
 	}
 	public AnnotationVisitor 	visitParameterAnnotation(int parameter, String desc, boolean visible) {
 		return super.visitParameterAnnotation(parameter, desc, visible);
@@ -109,9 +102,7 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		super.visitTryCatchBlock(start, end, handler, type);
 	}
 	public void 	visitTypeInsn(int opcode, String type) {
-		String deobf = type.charAt(0) == '[' ? main.deobfTypeDescriptor(type) : main.srg.getClassName(type);
-		//if(type.contains("$"))
-		//	System.out.println(type+" -> "+deobf);
+		String deobf = type.charAt(0) == '[' ? main.deobfTypeDescriptor(type) : main.map.getClass(type);
 		super.visitTypeInsn(opcode, deobf);
 	}
 	public void 	visitVarInsn(int opcode, int var) {
