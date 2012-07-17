@@ -266,7 +266,7 @@ public class Main {
 			m.input = new File(args[0]);
 			m.output = new File(args[1]);
 			m.map = mcp.getMapping();
-			m.xpathlist = (args.length < 6 ? new String[0] : args[8].split(File.pathSeparator));
+			m.xpathlist = (args.length < 6 ? new String[0] : args[5].split(File.pathSeparator));
 			m.run();
 		}
 	}

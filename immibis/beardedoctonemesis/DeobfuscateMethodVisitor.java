@@ -82,8 +82,8 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		super.visitMaxs(maxStack, maxLocals);
 	}
 	public void 	visitMethodInsn(int opcode, String owner, String name, String desc) {
-		if(main.map.getClass(owner).contains("EnumMobType"))
-			throw new RuntimeException("boom '"+owner+"' -> '"+main.map.getClass(owner)+"'");
+		//if(main.map.getClass(owner).contains("EnumMobType"))
+			//throw new RuntimeException("boom '"+owner+"' -> '"+main.map.getClass(owner)+"'");
 		super.visitMethodInsn(opcode,
 				main.map.getClass(owner),
 				main.lookupInheritedMethod(owner, name, desc),
