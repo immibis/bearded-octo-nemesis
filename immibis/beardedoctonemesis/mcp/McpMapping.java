@@ -71,6 +71,14 @@ public class McpMapping {
 			m.setExceptions(clazz, method_name, descriptor, Arrays.asList(e.getValue()));
 		}
 		
+		if(reobf)
+			m.addPrefix("net/minecraft/src/", "");
+		else
+		{
+			m.setDefaultPackage("net/minecraft/src/");
+			m.addPrefix("forge/", "net/minecraft/src/forge/");
+		}
+		
 		return m;
 	}
 }

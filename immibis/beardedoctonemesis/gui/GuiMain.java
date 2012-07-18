@@ -89,7 +89,7 @@ public class GuiMain extends JFrame {
 		JButton goButton = new JButton("Go");
 		
 		inputField = new JTextField("C:\\Users\\Alex\\mcp2\\tech-1.2.5\\lib\\obf\\client\\industrialcraft-2-client_1.95b.jar");
-		outputField = new JTextField("C:\\Users\\Alex\\mcp2\\tech-1.2.5\\lib\\BONTEST-industrialcraft-2-client_1.95b.zip");
+		outputField = new JTextField("C:\\Users\\Alex\\mcp2\\tech-1.2.5\\jars\\mods\\BONTEST-industrialcraft-2-client_1.95b.zip");
 		mcpField = new JTextField("C:\\Users\\Alex\\mcp2\\tech-1.2.5");
 		
 		sideSelect = new JComboBox(Side.values());

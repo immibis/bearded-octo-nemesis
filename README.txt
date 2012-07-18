@@ -1,8 +1,5 @@
-You'll want to run this from the command line, with "java -jar nameofjarfile.jar"
-followed by the arguments. Run it with no arguments to see the arguments it
-needs.
+Compile into a jar file, or download the one from Github, and then run it to get the GUI version
+which can deobfuscate mods.
 
-It needs the path to the SIDE.srg, SIDE.exc, methods.csv and fields.csv from
-MCP, as well as the input and output files, and the side number, where SIDE is
-"client" (side number 0) or "server" (side number 1).
-
+For the command line version, use "java -cp nameofjarfile.jar immibis.beardedoctonemesis.Main"
+followed by the required arguments. With no arguments, it shows what the expected arguments are.
