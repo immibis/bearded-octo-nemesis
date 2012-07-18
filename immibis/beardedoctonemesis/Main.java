@@ -26,6 +26,8 @@ public class Main {
 	public Map<String, String> fields, methods; // maps descriptors to final names*/
 	public String[] xpathlist;
 	
+	public Collection<String> ignoredPrefixes = new HashSet<String>();
+	
 	public Map<String, Set<String>> supers = new HashMap<String, Set<String>>();
 	
 	public Mapping map;
@@ -142,6 +144,9 @@ public class Main {
 	}
 	
 	private boolean isClassIgnored(String cl) {
+		for(String s : ignoredPrefixes)
+			if(cl.startsWith(s))
+				return true;
 		if(cl.startsWith("org/apache/") || cl.startsWith("org/gjt/") || cl.startsWith("org/json/"))
 			return true;
 		if(cl.startsWith("org/sqlite/") || cl.startsWith("org/yaml/") || cl.startsWith("org/ibex/"))
