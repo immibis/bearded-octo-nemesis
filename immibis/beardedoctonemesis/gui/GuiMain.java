@@ -1,5 +1,6 @@
 package immibis.beardedoctonemesis.gui;
 
+import immibis.beardedoctonemesis.IProgressListener;
 import immibis.beardedoctonemesis.Main;
 import immibis.beardedoctonemesis.mcp.McpMapping;
 
@@ -14,14 +15,22 @@ import javax.swing.*;
 public class GuiMain extends JFrame {
 	private JComboBox opSelect, sideSelect;
 	private JTextField inputField, outputField, mcpField;
+	private JButton goButton;
+	private JProgressBar progressBar;
 	
-	void goButtonPressed() {
-		Operation op = (Operation)opSelect.getSelectedItem();
-		Side side = (Side)sideSelect.getSelectedItem();
+	private Thread curTask = null;
+	
+	synchronized void goButtonPressed() {
 		
-		File mcpDir = new File(mcpField.getText());
-		File confDir = new File(mcpDir, "conf");
-		File xpathfile = new File(mcpDir, side.xpath);
+		if(curTask != null && curTask.isAlive())
+			return;
+		
+		final Operation op = (Operation)opSelect.getSelectedItem();
+		final Side side = (Side)sideSelect.getSelectedItem();
+		
+		final File mcpDir = new File(mcpField.getText());
+		final File confDir = new File(mcpDir, "conf");
+		final File xpathfile = new File(mcpDir, side.xpath);
 		
 		String error = null;
 		
@@ -38,28 +47,58 @@ public class GuiMain extends JFrame {
 			return;
 		}
 		
-		try {
-			McpMapping mcp = new McpMapping(confDir, side.mcpside, false);
-			
-			Main m = new Main();
-			m.input = new File(inputField.getText());
-			m.output = new File(outputField.getText());
-			m.map = mcp.getMapping();
-			m.xpathlist = new String[] {xpathfile.getAbsolutePath()};
-			m.run();
-		} catch(Exception e) {
-			String s = "An error has occurred - give immibis this stack trace (which has been copied to the clipboard)\n";
-			s += "\n" + e;
-			for(StackTraceElement ste : e.getStackTrace())
-			{
-				s += "\n\tat " + ste.toString();
-				if(ste.getClassName().startsWith("javax.swing."))
-					break;
+		progressBar.setValue(0);
+		
+		curTask = new Thread() {
+			public void run() {
+				try {
+					McpMapping mcp = new McpMapping(confDir, side.mcpside, false);
+					
+					Main m = new Main();
+					m.input = new File(inputField.getText());
+					m.output = new File(outputField.getText());
+					m.map = mcp.getMapping();
+					m.xpathlist = new String[] {xpathfile.getAbsolutePath()};
+					m.progress = new IProgressListener() {
+						@Override
+						public void start(final int max, String text) {
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									progressBar.setMaximum(max);
+									progressBar.setValue(0);
+								}
+							});
+						}
+						
+						@Override
+						public void set(final int value) {
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									progressBar.setValue(value);
+								}
+							});
+						}
+					};
+					m.run();
+				} catch(Exception e) {
+					String s = "An error has occurred - give immibis this stack trace (which has been copied to the clipboard)\n";
+					s += "\n" + e;
+					for(StackTraceElement ste : e.getStackTrace())
+					{
+						s += "\n\tat " + ste.toString();
+						if(ste.getClassName().startsWith("javax.swing."))
+							break;
+					}
+					System.err.println(s);
+					Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), null);
+					JOptionPane.showMessageDialog(GuiMain.this, s, "BON - Internal error", JOptionPane.ERROR_MESSAGE);
+				} finally {
+					progressBar.setValue(0);
+				}
 			}
-			System.err.println(s);
-			Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), null);
-			JOptionPane.showMessageDialog(this, s, "BON - Internal error", JOptionPane.ERROR_MESSAGE);
-		}
+		};
+		
+		curTask.start();
 	}
 	
 	public GuiMain() {
@@ -86,14 +125,16 @@ public class GuiMain extends JFrame {
 		JButton chooseOutputButton = new JButton("Browse");
 		JButton chooseMCPButton = new JButton("Browse");
 		
-		JButton goButton = new JButton("Go");
+		goButton = new JButton("Go");
 		
-		inputField = new JTextField("C:\\Users\\Alex\\mcp2\\tech-1.2.5\\lib\\obf\\client\\industrialcraft-2-client_1.95b.jar");
-		outputField = new JTextField("C:\\Users\\Alex\\mcp2\\tech-1.2.5\\jars\\mods\\BONTEST-industrialcraft-2-client_1.95b.zip");
-		mcpField = new JTextField("C:\\Users\\Alex\\mcp2\\tech-1.2.5");
+		inputField = new JTextField();
+		outputField = new JTextField();
+		mcpField = new JTextField();
 		
 		sideSelect = new JComboBox(Side.values());
 		opSelect = new JComboBox(Operation.values());
+		
+		progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
 		
 		inputField.setMinimumSize(new Dimension(100, 0));
 		
@@ -124,6 +165,8 @@ public class GuiMain extends JFrame {
 		gbc.gridy = 5;
 		gbc.gridwidth = 3;
 		contentPane.add(goButton, gbc.clone());
+		gbc.gridy = 6;
+		contentPane.add(progressBar, gbc.clone());
 		
 		setContentPane(contentPane);
 		pack();

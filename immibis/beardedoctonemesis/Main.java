@@ -31,10 +31,12 @@ public class Main {
 	public Map<String, Set<String>> supers = new HashMap<String, Set<String>>();
 	
 	public Mapping map;
+
+	public IProgressListener progress;
 	
 	// returns an internal name (with /'s and $'s)
 	public static String fileToClass(String fn) {
-		return fn.replace(File.separator, "/").replace(".class", "");
+		return fn.replace(File.separator, "/").substring(0, fn.length() - 6);
 	}
 	
 	// expects an internal name (with /'s and $'s)
@@ -43,11 +45,17 @@ public class Main {
 	}
 	
 	private void getParents(File f) throws IOException {
+		if(progress != null) progress.start(countZipEntries(f), "");
+		
 		ZipInputStream inZip = new ZipInputStream(new FileInputStream(f));
+		int k = 0;
 		while(true) {
 			ZipEntry inEntry = inZip.getNextEntry();
 			if(inEntry == null)
 				break;
+		
+			if(progress != null) progress.set(k++);
+			
 			if(!inEntry.getName().endsWith(".class") || isClassIgnored(fileToClass(inEntry.getName())))
 				continue;
 			
@@ -71,6 +79,17 @@ public class Main {
 		inZip.close();
 	}
 	
+	private int countZipEntries(File f) throws IOException {
+		int n = 0;
+		ZipInputStream inZip = new ZipInputStream(new FileInputStream(f));
+		while(true) {
+			ZipEntry inEntry = inZip.getNextEntry();
+			if(inEntry == null)
+				return n;
+			n++;
+		}
+	}
+
 	@SuppressWarnings("unused")
 	public void run() throws IOException {
 		ZipInputStream inZip;
@@ -90,10 +109,15 @@ public class Main {
 		
 		inZip = new ZipInputStream(new FileInputStream(input));
 		
+		if(progress != null) progress.start(countZipEntries(input), "");
+		
+		int nProcessed = 0;
 		while(true) {
 			ZipEntry inEntry = inZip.getNextEntry();
 			if(inEntry == null)
 				break;
+			
+			if(progress != null) progress.set(nProcessed++);
 			
 			if(!inEntry.getName().endsWith(".class") || isClassIgnored(fileToClass(inEntry.getName()))) {
 				//System.out.println("Copying "+inEntry.getName());

@@ -35,7 +35,7 @@ public class McpMapping {
 		
 		for(Map.Entry<String, String> e : srg_file.classes.entrySet()) {
 			m.setClass(e.getKey(), e.getValue());
-			System.out.println(e.getKey()+" -> "+e.getValue());
+			//System.out.println(e.getKey()+" -> "+e.getValue());
 		}
 		
 		for(Map.Entry<String, String> e : srg_file.methods.entrySet()) {
