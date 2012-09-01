@@ -1,10 +1,13 @@
 package immibis.beardedoctonemesis.mcp;
 
 public enum Side {
+	JOINED("joined.srg", "joined.exc", 0),
 	CLIENT("client.srg", "client.exc", 0),
 	SERVER("server.srg", "server.exc", 1);
 	
 	public static Side fromString(String s) {
+		if(s.equalsIgnoreCase("joined"))
+			return JOINED;
 		if(s.equalsIgnoreCase("client"))
 			return CLIENT;
 		if(s.equalsIgnoreCase("server"))
