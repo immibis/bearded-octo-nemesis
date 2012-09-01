@@ -1,7 +1,7 @@
 package immibis.beardedoctonemesis.mcp;
 
 public enum Side {
-	JOINED("joined.srg", "joined.exc", 0),
+	JOINED("joined.srg", "joined.exc", 2),
 	CLIENT("client.srg", "client.exc", 0),
 	SERVER("server.srg", "server.exc", 1);
 	
