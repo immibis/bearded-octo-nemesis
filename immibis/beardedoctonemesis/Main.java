@@ -82,89 +82,96 @@ public class Main {
 	private int countZipEntries(File f) throws IOException {
 		int n = 0;
 		ZipInputStream inZip = new ZipInputStream(new FileInputStream(f));
-		while(true) {
-			ZipEntry inEntry = inZip.getNextEntry();
-			if(inEntry == null)
-				return n;
-			n++;
+		try {
+			while(true) {
+				ZipEntry inEntry = inZip.getNextEntry();
+				if(inEntry == null)
+					return n;
+				n++;
+			}
+		} finally {
+			inZip.close();
 		}
 	}
 
 	@SuppressWarnings("unused")
 	public void run() throws IOException {
-		ZipInputStream inZip;
+		ZipInputStream inZip = null;
 		ZipOutputStream outZip = new ZipOutputStream(new FileOutputStream(output));
-		
-		File parentCache = null;//new File("pcache.txt");
-		if(parentCache == null || !parentCache.exists())
-		{
-			for(String xpath : xpathlist)
-				getParents(new File(xpath));
-			getParents(input);
-			if(parentCache != null)
-				saveParents(parentCache);
-		}
-		else
-			loadParents(parentCache);
-		
-		inZip = new ZipInputStream(new FileInputStream(input));
-		
-		if(progress != null) progress.start(countZipEntries(input), "");
-		
-		int nProcessed = 0;
-		while(true) {
-			ZipEntry inEntry = inZip.getNextEntry();
-			if(inEntry == null)
-				break;
-			
-			if(progress != null) progress.set(nProcessed++);
-			
-			if(!inEntry.getName().endsWith(".class") || isClassIgnored(fileToClass(inEntry.getName()))) {
-				//System.out.println("Copying "+inEntry.getName());
-				ZipEntry outEntry = new ZipEntry(inEntry.getName());
-				outZip.putNextEntry(outEntry);
-				
-				byte[] buf = new byte[1048576];
-				int len = 0;
-				do {
-					len = inZip.read(buf);
-					if(len > 0)
-						outZip.write(buf, 0, len);
-				} while(len > 0);
-				inZip.closeEntry();
-				
-				outZip.closeEntry();
-				continue;
+		try {
+			File parentCache = null;//new File("pcache.txt");
+			if(parentCache == null || !parentCache.exists())
+			{
+				for(String xpath : xpathlist)
+					getParents(new File(xpath));
+				getParents(input);
+				if(parentCache != null)
+					saveParents(parentCache);
 			}
-			
-			String oldName = fileToClass(inEntry.getName());
-			String newName = map.getClass(oldName);
-			
-			if(oldName.equals(newName))
-				System.out.println(oldName);
 			else
-				System.out.println(oldName+" -> "+newName);
+				loadParents(parentCache);
 			
-			try {
+			inZip = new ZipInputStream(new FileInputStream(input));
 			
-				ClassReader cr = new ClassReader(readClass(inZip));
+			if(progress != null) progress.start(countZipEntries(input), "");
+			
+			int nProcessed = 0;
+			while(true) {
+				ZipEntry inEntry = inZip.getNextEntry();
+				if(inEntry == null)
+					break;
 				
-				ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-				cr.accept(new DeobfuscateVisitor(cw, this), 0);
-				inZip.closeEntry();
+				if(progress != null) progress.set(nProcessed++);
 				
-				ZipEntry outEntry = new ZipEntry(classToFile(newName));
-				outZip.putNextEntry(outEntry);
-				outZip.write(cw.toByteArray());
-				outZip.closeEntry();
-			} catch(Exception e) {
-				System.out.println("Error occurred while processing " + oldName + " -> " + newName);
+				if(!inEntry.getName().endsWith(".class") || isClassIgnored(fileToClass(inEntry.getName()))) {
+					//System.out.println("Copying "+inEntry.getName());
+					ZipEntry outEntry = new ZipEntry(inEntry.getName());
+					outZip.putNextEntry(outEntry);
+					
+					byte[] buf = new byte[1048576];
+					int len = 0;
+					do {
+						len = inZip.read(buf);
+						if(len > 0)
+							outZip.write(buf, 0, len);
+					} while(len > 0);
+					inZip.closeEntry();
+					
+					outZip.closeEntry();
+					continue;
+				}
 				
-				throw new RuntimeException(e);
+				String oldName = fileToClass(inEntry.getName());
+				String newName = map.getClass(oldName);
+				
+				if(oldName.equals(newName))
+					System.out.println(oldName);
+				else
+					System.out.println(oldName+" -> "+newName);
+				
+				try {
+				
+					ClassReader cr = new ClassReader(readClass(inZip));
+					
+					ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+					cr.accept(new DeobfuscateVisitor(cw, this), 0);
+					inZip.closeEntry();
+					
+					ZipEntry outEntry = new ZipEntry(classToFile(newName));
+					outZip.putNextEntry(outEntry);
+					outZip.write(cw.toByteArray());
+					outZip.closeEntry();
+				} catch(Exception e) {
+					System.out.println("Error occurred while processing " + oldName + " -> " + newName);
+					
+					throw new RuntimeException(e);
+				}
 			}
+		} finally {
+			outZip.close();
+			if(inZip != null)
+				inZip.close();
 		}
-		inZip.close();
-		outZip.close();
 	}
 	
 	private boolean isClassIgnored(String cl) {

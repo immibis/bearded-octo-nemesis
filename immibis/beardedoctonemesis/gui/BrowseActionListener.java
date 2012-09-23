@@ -16,8 +16,11 @@ public class BrowseActionListener implements ActionListener {
 	private boolean isOpen;
 	private Component parent;
 	private JFileChooser jfc;
+	private Reference<File> defaultDir;
 
-	public BrowseActionListener(JTextField inputField, boolean isOpen, Component parent, boolean dirOnly) {
+	public BrowseActionListener(JTextField inputField, boolean isOpen, Component parent, boolean dirOnly, Reference<File> defaultDir) {
+		
+		this.defaultDir = defaultDir;
 		this.textbox = inputField;
 		this.isOpen = isOpen;
 		this.parent = parent;
@@ -43,6 +46,7 @@ public class BrowseActionListener implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		int rv;
+		jfc.setCurrentDirectory(defaultDir.val);
 		if(isOpen)
 			rv = jfc.showOpenDialog(parent);
 		else
@@ -57,6 +61,8 @@ public class BrowseActionListener implements ActionListener {
 				textbox.setText(f.getAbsolutePath());
 			}
 		}
+		
+		defaultDir.val = jfc.getSelectedFile().getParentFile();
 	}
 
 }

@@ -1,7 +1,5 @@
 package immibis.beardedoctonemesis.mcp;
 
-import immibis.beardedoctonemesis.Main;
-
 import java.io.*;
 import java.util.*;
 

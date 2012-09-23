@@ -13,7 +13,10 @@ import java.io.File;
 import javax.swing.*;
 
 public class GuiMain extends JFrame {
-	private JComboBox opSelect, sideSelect;
+	private static final long serialVersionUID = 1;
+	
+	private JComboBox<Operation> opSelect;
+	private JComboBox<Side>sideSelect;
 	private JTextField inputField, outputField, mcpField;
 	private JButton goButton;
 	private JProgressBar progressBar;
@@ -25,12 +28,12 @@ public class GuiMain extends JFrame {
 		if(curTask != null && curTask.isAlive())
 			return;
 		
-		final Operation op = (Operation)opSelect.getSelectedItem();
+		//final Operation op = (Operation)opSelect.getSelectedItem();
 		final Side side = (Side)sideSelect.getSelectedItem();
 		
 		final File mcpDir = new File(mcpField.getText());
 		final File confDir = new File(mcpDir, "conf");
-		final File xpathfile = new File(mcpDir, side.xpath);
+		final String[] xpathlist = side.xpath.split(File.pathSeparator);
 		
 		String error = null;
 		
@@ -38,8 +41,20 @@ public class GuiMain extends JFrame {
 			error = "MCP folder not found (at "+mcpDir+")";
 		else if(!confDir.isDirectory())
 			error = "'conf' folder not found in MCP folder (at "+confDir+")";
-		else if(!xpathfile.isFile())
-			error = "'" + side.xpath + "' not found in MCP folder (at "+xpathfile+")";
+		else
+		{
+			for(int k = 0; k < xpathlist.length; k++)
+			{
+				String path = xpathlist[k];
+				File xpathfile = new File(mcpDir, path);
+				if(!xpathfile.isFile())
+				{
+					error = "'" + path + "' not found in MCP folder (at "+xpathfile+")";
+					break;
+				}
+				xpathlist[k] = xpathfile.getAbsolutePath();
+			}
+		}
 		
 		if(error != null)
 		{
@@ -58,7 +73,7 @@ public class GuiMain extends JFrame {
 					m.input = new File(inputField.getText());
 					m.output = new File(outputField.getText());
 					m.map = mcp.getMapping();
-					m.xpathlist = new String[] {xpathfile.getAbsolutePath()};
+					m.xpathlist = xpathlist;
 					m.progress = new IProgressListener() {
 						@Override
 						public void start(final int max, String text) {
@@ -131,8 +146,8 @@ public class GuiMain extends JFrame {
 		outputField = new JTextField();
 		mcpField = new JTextField();
 		
-		sideSelect = new JComboBox(Side.values());
-		opSelect = new JComboBox(Operation.values());
+		sideSelect = new JComboBox<Side>(Side.values());
+		opSelect = new JComboBox<Operation>(Operation.values());
 		
 		progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
 		
@@ -171,9 +186,11 @@ public class GuiMain extends JFrame {
 		setContentPane(contentPane);
 		pack();
 		
-		chooseInputButton.addActionListener(new BrowseActionListener(inputField, true, this, false));
-		chooseOutputButton.addActionListener(new BrowseActionListener(outputField, false, this, false));
-		chooseMCPButton.addActionListener(new BrowseActionListener(mcpField, true, this, true));
+		Reference<File> defaultDir = new Reference<File>();
+		
+		chooseInputButton.addActionListener(new BrowseActionListener(inputField, true, this, false, defaultDir));
+		chooseOutputButton.addActionListener(new BrowseActionListener(outputField, false, this, false, defaultDir));
+		chooseMCPButton.addActionListener(new BrowseActionListener(mcpField, true, this, true, defaultDir));
 		
 		goButton.addActionListener(new ActionListener() {
 			@Override
