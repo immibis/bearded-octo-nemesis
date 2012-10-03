@@ -53,7 +53,7 @@ public class DeobfuscateVisitor extends ClassVisitor {
     
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-    	String deobfName = main.deobfField(inClassName, name);
+    	String deobfName = main.lookupInheritedField(inClassName, name);
         return super.visitField(access, deobfName, main.deobfTypeDescriptor(desc), signature, value);
     }
 

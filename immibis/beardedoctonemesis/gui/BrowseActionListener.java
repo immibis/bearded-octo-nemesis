@@ -62,7 +62,7 @@ public class BrowseActionListener implements ActionListener {
 			}
 		}
 		
-		defaultDir.val = jfc.getSelectedFile().getParentFile();
+		defaultDir.val = jfc.getCurrentDirectory();
 	}
 
 }
