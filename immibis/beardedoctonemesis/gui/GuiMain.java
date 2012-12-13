@@ -15,8 +15,8 @@ import javax.swing.*;
 public class GuiMain extends JFrame {
 	private static final long serialVersionUID = 1;
 	
-	private JComboBox<Operation> opSelect;
-	private JComboBox<Side>sideSelect;
+	private JComboBox opSelect;
+	private JComboBox sideSelect;
 	private JTextField inputField, outputField, mcpField;
 	private JButton goButton;
 	private JProgressBar progressBar;
@@ -146,8 +146,8 @@ public class GuiMain extends JFrame {
 		outputField = new JTextField();
 		mcpField = new JTextField();
 		
-		sideSelect = new JComboBox<Side>(Side.values());
-		opSelect = new JComboBox<Operation>(Operation.values());
+		sideSelect = new JComboBox(Side.values());
+		opSelect = new JComboBox(Operation.values());
 		
 		progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
 		
