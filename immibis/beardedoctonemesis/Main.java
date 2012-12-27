@@ -295,7 +295,7 @@ public class Main {
 				return;
 			}
 			
-			McpMapping mcp = new McpBukkitMapping(confDir, side, reob);
+			McpMapping mcp = new McpMapping(confDir, side, reob);
 			
 			Main m = new Main();
 			m.base = new File(".");
