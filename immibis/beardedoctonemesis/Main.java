@@ -275,7 +275,7 @@ public class Main {
 			m.run();
 		} else {
 			if((args.length != 5 && args.length != 6) || (!args[4].equals("deob") && !args[4].equals("reob"))) {
-				System.err.println("Arguments: <input file> <output file> <MCP conf dir> [client|server] [deob|reob] [xpath]");
+				System.err.println("Arguments: <input file> <output file> <MCP conf dir> [client|server|joined|packaged] [deob|reob] [xpath]");
 				System.err.println("  xpath is a "+File.pathSeparator+"-separated list of extra jar files to use, you normally need at least the");
 				System.err.println("  minecraft jar here or it won't deobfuscate mods correctly.");
 				return;
