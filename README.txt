@@ -1,5 +1,7 @@
 MAIN DOWNLOAD: http://dl.dropbox.com/u/2944265/mods/BON.jar
 
+You must install Forge (if necessary) and reobfuscate before using BON to deobfuscate a mod.
+
 Compile into a jar file, or download the one from Github, and then run it to get the GUI version
 which can deobfuscate mods.
 
