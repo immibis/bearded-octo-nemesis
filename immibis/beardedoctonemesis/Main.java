@@ -44,39 +44,85 @@ public class Main {
 		return cn+".class";
 	}
 	
+	private List<String> getPathsInDirectory(File root) {
+		List<String> rv = new ArrayList<String>();
+		for(String fn : root.list()) {
+			File f = new File(root, fn);
+			if(f.isDirectory())
+				for(String subpath : getPathsInDirectory(new File(root, fn)))
+					rv.add(fn+"/"+subpath);
+			else
+				rv.add(fn);
+		}
+		return rv;
+	}
+	
 	private void getParents(File f) throws IOException {
-		if(progress != null) progress.start(countZipEntries(f), "");
 		
-		ZipInputStream inZip = new ZipInputStream(new FileInputStream(f));
-		int k = 0;
-		while(true) {
-			ZipEntry inEntry = inZip.getNextEntry();
-			if(inEntry == null)
-				break;
-		
-			if(progress != null) progress.set(k++);
+		if(f.isDirectory()) {
+			List<String> paths = getPathsInDirectory(f);
+			if(progress != null) progress.start(paths.size(), "Reading "+f);
 			
-			if(!inEntry.getName().endsWith(".class") || isClassIgnored(fileToClass(inEntry.getName())))
-				continue;
-			
-			System.out.println(inEntry.getName());
-			
-			GetParentVisitor gpv = new GetParentVisitor();
-			
-			try {
-				ClassReader cr = new ClassReader(inZip);
-				cr.accept(gpv, 0);
-				inZip.closeEntry();
-			} catch(GetParentVisitor.FinishedException e) {
+			int k = 0;
+			for(String path : paths) {
+				File f2 = new File(f, path);
+				
+				if(progress != null) progress.set(k++);
+				
+				if(!path.endsWith(".class") || isClassIgnored(fileToClass(path)))
+					continue;
+				
+				GetParentVisitor gpv = new GetParentVisitor();
+				
+				FileInputStream in = new FileInputStream(f2);
+				
+				try {
+					ClassReader cr = new ClassReader(in);
+					cr.accept(gpv, 0);
+					in.close();
+				} catch(GetParentVisitor.FinishedException e) {
+				}
+				
+				Set<String> inheritsFrom = new HashSet<String>();
+				inheritsFrom.add(gpv.parent);
+				for(String s : gpv.interfaces)
+					inheritsFrom.add(s);
+				supers.put(gpv.name, inheritsFrom);
 			}
 			
-			Set<String> inheritsFrom = new HashSet<String>();
-			inheritsFrom.add(gpv.parent);
-			for(String s : gpv.interfaces)
-				inheritsFrom.add(s);
-			supers.put(gpv.name, inheritsFrom);
+		} else {
+			if(progress != null) progress.start(countZipEntries(f), "Reading "+f.getName());
+			ZipInputStream inZip = new ZipInputStream(new FileInputStream(f));
+			int k = 0;
+			while(true) {
+				ZipEntry inEntry = inZip.getNextEntry();
+				if(inEntry == null)
+					break;
+			
+				if(progress != null) progress.set(k++);
+				
+				if(!inEntry.getName().endsWith(".class") || isClassIgnored(fileToClass(inEntry.getName())))
+					continue;
+				
+				System.out.println(inEntry.getName());
+				
+				GetParentVisitor gpv = new GetParentVisitor();
+				
+				try {
+					ClassReader cr = new ClassReader(inZip);
+					cr.accept(gpv, 0);
+					inZip.closeEntry();
+				} catch(GetParentVisitor.FinishedException e) {
+				}
+				
+				Set<String> inheritsFrom = new HashSet<String>();
+				inheritsFrom.add(gpv.parent);
+				for(String s : gpv.interfaces)
+					inheritsFrom.add(s);
+				supers.put(gpv.name, inheritsFrom);
+			}
+			inZip.close();
 		}
-		inZip.close();
 	}
 	
 	private int countZipEntries(File f) throws IOException {
@@ -148,6 +194,9 @@ public class Main {
 					System.out.println(oldName);
 				else
 					System.out.println(oldName+" -> "+newName);
+				
+				
+				
 				
 				try {
 				
@@ -242,69 +291,36 @@ public class Main {
 	}
 
 	public static void main(String[] args) throws Exception {
-		if(args.length == 1 && args[0].equals("test")) {
-			/*Main m = new Main();
-			m.base = new File(MCP_BASE);
-			m.input = new File(m.base, "jars/bin/minecraft.jar");
-			m.output = new File("minecraft_deobf.jar");
-			m.exc = new ExcFile(new File(m.base, "conf/client.exc"));
-			m.srg = new SrgFile(new File(m.base, "conf/client.srg"));
-			m.fields = new CsvFile(new File(m.base, "conf/fields.csv"), CLIENT, false);
-			m.methods = new CsvFile(new File(m.base, "conf/methods.csv"), CLIENT, false);
-			m.run();
-			
-			m = new Main();
-			m.base = new File(MCP_BASE);
-			m.input = new File(m.base, "jars/minecraft_server.jar");
-			m.output = new File("minecraft_server_deobf.jar");
-			m.exc = new ExcFile(new File(m.base, "conf/server.exc"));
-			m.srg = new SrgFile(new File(m.base, "conf/server.srg"));
-			m.fields = new CsvFile(new File(m.base, "conf/fields.csv"), SERVER, false);
-			m.methods = new CsvFile(new File(m.base, "conf/methods.csv"), SERVER, false);
-			m.run();*/
-			
-			Main m = new Main();
-			m.base = new File(MCP_BASE);
-			m.input = new File("C:\\users\\alex\\mcp2\\tech-1.2.5\\lib\\obf\\RedPowerCore-2.0pr5b1.zip");
-			m.output = new File("C:\\users\\alex\\mcp2\\tech-1.2.5\\jars\\mods\\RedPowerCore-2.0pr5b1.zip");
-			//m.exc = new ExcFile(new File(m.base, "conf/client.exc"));
-			//m.srg = new SrgFile(new File(m.base, "conf/client.srg"), m, false);
-			//m.fields = new CsvFile(new File(m.base, "conf/fields.csv"), CLIENT, false);
-			//m.methods = new CsvFile(new File(m.base, "conf/methods.csv"), CLIENT, false);
-			m.xpathlist = new String[] {"C:\\users\\alex\\mcp2\\tech-1.2.5\\jars\\bin\\minecraft.jar"};
-			m.run();
-		} else {
-			if((args.length != 5 && args.length != 6) || (!args[4].equals("deob") && !args[4].equals("reob"))) {
-				System.err.println("Arguments: <input file> <output file> <MCP conf dir> [client|server|joined|packaged] [deob|reob] [xpath]");
-				System.err.println("  xpath is a "+File.pathSeparator+"-separated list of extra jar files to use, you normally need at least the");
-				System.err.println("  minecraft jar here or it won't deobfuscate mods correctly.");
-				return;
-			}
-			boolean reob = args[4].equals("reob");
-			
-			File confDir = new File(args[2]);
-			
-			if(!confDir.isDirectory()) {
-				System.err.println(args[2]+" is not a directory.");
-				return;
-			}
-			
-			Side side = Side.fromString(args[3]);
-			if(side == null) {
-				System.err.println(args[3]+" is not a valid side.");
-				return;
-			}
-			
-			McpMapping mcp = new McpMapping(confDir, side, reob);
-			
-			Main m = new Main();
-			m.base = new File(".");
-			m.input = new File(args[0]);
-			m.output = new File(args[1]);
-			m.map = mcp.getMapping();
-			m.xpathlist = (args.length < 6 ? new String[0] : args[5].split(File.pathSeparator));
-			m.run();
+		if((args.length != 5 && args.length != 6) || (!args[4].equals("deob") && !args[4].equals("reob"))) {
+			System.err.println("Arguments: [--debug] <input file> <output file> <MCP conf dir> [client|server|joined|packaged] [deob|reob] [xpath]");
+			System.err.println("  xpath is a "+File.pathSeparator+"-separated list of extra jar files to use, you normally need at least the");
+			System.err.println("  minecraft jar here or it won't deobfuscate mods correctly.");
+			return;
 		}
+		boolean reob = args[4].equals("reob");
+		
+		File confDir = new File(args[2]);
+		
+		if(!confDir.isDirectory()) {
+			System.err.println(args[2]+" is not a directory.");
+			return;
+		}
+		
+		Side side = Side.fromString(args[3]);
+		if(side == null) {
+			System.err.println(args[3]+" is not a valid side.");
+			return;
+		}
+		
+		McpMapping mcp = new McpMapping(confDir, side, reob);
+		
+		Main m = new Main();
+		m.base = new File(".");
+		m.input = new File(args[0]);
+		m.output = new File(args[1]);
+		m.map = mcp.getMapping();
+		m.xpathlist = (args.length < 6 ? new String[0] : args[5].split(File.pathSeparator));
+		m.run();
 	}
 
 	public String deobfTypeDescriptor(String desc) {

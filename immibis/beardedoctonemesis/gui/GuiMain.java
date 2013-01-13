@@ -50,6 +50,8 @@ public class GuiMain extends JFrame {
 				if(!xpathfile.isFile())
 				{
 					error = "'" + path + "' not found in MCP folder (at "+xpathfile+")";
+					if(xpathfile.toString().endsWith("_reobf.jar"))
+						error += "\n\nYou need to reobfuscate before using BON.";
 					break;
 				}
 				xpathlist[k] = xpathfile.getAbsolutePath();
@@ -96,17 +98,28 @@ public class GuiMain extends JFrame {
 					};
 					m.run();
 				} catch(Exception e) {
-					String s = "An error has occurred - give immibis this stack trace (which has been copied to the clipboard)\n";
-					s += "\n" + e;
-					for(StackTraceElement ste : e.getStackTrace())
-					{
-						s += "\n\tat " + ste.toString();
-						if(ste.getClassName().startsWith("javax.swing."))
+					String s = getStackTraceMessage(e);
+					
+					if(!new File(confDir, side.mcpside.srg_name).exists()) {
+						s = side.mcpside.srg_name+" not found in conf directory. \n";
+						switch(side) {
+						case Client:
+						case Server:
+							s += "If you're using Forge, set the side to Universal (1.4.6+) or Universal_old (1.4.5 and earlier)";
 							break;
+						case Universal:
+							s += "If you're not using Forge, set the side to Client or Server.\n";
+							s += "If you're using Forge on 1.4.5 or earlier, set the side to Universal_old.";
+							break;
+						case Universal_old:
+							s += "If you're not using Forge, set the side to Client or Server.\n";
+							break;
+						}
 					}
+					
 					System.err.println(s);
 					Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), null);
-					JOptionPane.showMessageDialog(GuiMain.this, s, "BON - Internal error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(GuiMain.this, s, "BON - Error", JOptionPane.ERROR_MESSAGE);
 				} finally {
 					progressBar.setValue(0);
 				}
@@ -114,6 +127,18 @@ public class GuiMain extends JFrame {
 		};
 		
 		curTask.start();
+	}
+	
+	private static String getStackTraceMessage(Throwable e) {
+		String s = "An error has occurred - give immibis this stack trace (which has been copied to the clipboard)\n";
+		s += "\n" + e;
+		for(StackTraceElement ste : e.getStackTrace())
+		{
+			s += "\n\tat " + ste.toString();
+			if(ste.getClassName().startsWith("javax.swing."))
+				break;
+		}
+		return s;
 	}
 	
 	public GuiMain() {
