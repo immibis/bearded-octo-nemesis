@@ -30,7 +30,7 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 	}
 	public void 	visitFieldInsn(int opcode, String owner, String name, String desc) {
 		String outOwner = main.map.getClass(owner);
-		String outName = main.lookupInheritedField(owner, name);
+		String outName = main.resolveField(owner, name, desc);
 		String outDesc = main.deobfTypeDescriptor(desc);
 		super.visitFieldInsn(opcode, outOwner, outName, outDesc);
 	}

@@ -1,11 +1,21 @@
 package immibis.beardedoctonemesis;
 
-import immibis.beardedoctonemesis.mcp.McpBukkitMapping;
 import immibis.beardedoctonemesis.mcp.McpMapping;
 import immibis.beardedoctonemesis.mcp.Side;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -29,6 +39,9 @@ public class Main {
 	public Collection<String> ignoredPrefixes = new HashSet<String>();
 	
 	public Map<String, Set<String>> supers = new HashMap<String, Set<String>>();
+	
+	// obf class -> (obf field name -> obf descriptor)
+	public Map<String, Map<String, String>> fieldDescriptors = new HashMap<String, Map<String,String>>();
 	
 	public Mapping map;
 
@@ -57,7 +70,20 @@ public class Main {
 		return rv;
 	}
 	
-	private void getParents(File f) throws IOException {
+	private void buildClassInfo(ClassReader reader) {
+		BuildClassInfoVisitor bciv = new BuildClassInfoVisitor();
+		reader.accept(bciv, 0);
+		
+		Set<String> inheritsFrom = new HashSet<String>();
+		inheritsFrom.add(bciv.parent);
+		for(String s : bciv.interfaces)
+			inheritsFrom.add(s);
+		supers.put(bciv.name, inheritsFrom);
+		
+		fieldDescriptors.put(bciv.name, bciv.fieldDescriptors);
+	}
+	
+	private void buildClassInfoFromClasspathEntry(File f) throws IOException {
 		
 		if(f.isDirectory()) {
 			List<String> paths = getPathsInDirectory(f);
@@ -72,22 +98,11 @@ public class Main {
 				if(!path.endsWith(".class") || isClassIgnored(fileToClass(path)))
 					continue;
 				
-				GetParentVisitor gpv = new GetParentVisitor();
+				System.out.println(path);
 				
 				FileInputStream in = new FileInputStream(f2);
-				
-				try {
-					ClassReader cr = new ClassReader(in);
-					cr.accept(gpv, 0);
-					in.close();
-				} catch(GetParentVisitor.FinishedException e) {
-				}
-				
-				Set<String> inheritsFrom = new HashSet<String>();
-				inheritsFrom.add(gpv.parent);
-				for(String s : gpv.interfaces)
-					inheritsFrom.add(s);
-				supers.put(gpv.name, inheritsFrom);
+				buildClassInfo(new ClassReader(in));
+				in.close();
 			}
 			
 		} else {
@@ -98,7 +113,7 @@ public class Main {
 				ZipEntry inEntry = inZip.getNextEntry();
 				if(inEntry == null)
 					break;
-			
+				
 				if(progress != null) progress.set(k++);
 				
 				if(!inEntry.getName().endsWith(".class") || isClassIgnored(fileToClass(inEntry.getName())))
@@ -106,20 +121,8 @@ public class Main {
 				
 				System.out.println(inEntry.getName());
 				
-				GetParentVisitor gpv = new GetParentVisitor();
-				
-				try {
-					ClassReader cr = new ClassReader(inZip);
-					cr.accept(gpv, 0);
-					inZip.closeEntry();
-				} catch(GetParentVisitor.FinishedException e) {
-				}
-				
-				Set<String> inheritsFrom = new HashSet<String>();
-				inheritsFrom.add(gpv.parent);
-				for(String s : gpv.interfaces)
-					inheritsFrom.add(s);
-				supers.put(gpv.name, inheritsFrom);
+				buildClassInfo(new ClassReader(inZip));
+				inZip.closeEntry();
 			}
 			inZip.close();
 		}
@@ -149,8 +152,8 @@ public class Main {
 			if(parentCache == null || !parentCache.exists())
 			{
 				for(String xpath : xpathlist)
-					getParents(new File(xpath));
-				getParents(input);
+					buildClassInfoFromClasspathEntry(new File(xpath));
+				buildClassInfoFromClasspathEntry(input);
 				if(parentCache != null)
 					saveParents(parentCache);
 			}
@@ -367,8 +370,8 @@ public class Main {
 		return lookupInheritedMethod(owner, name, desc, false);
 	}
 	
-	public String lookupInheritedField(String owner, String name) {
-		return lookupInheritedField(owner, name, false);
+	public String resolveField(String owner, String name, String desc) {
+		return resolveField(owner, name, desc, false);
 	}
 
 	public String lookupInheritedMethod(String owner, String name, String desc, boolean verbose) {
@@ -391,16 +394,19 @@ public class Main {
 		return name;
 	}
 	
-	public String lookupInheritedField(String owner, String name, boolean verbose) {
+	public String resolveField(String owner, String name, String desc, boolean verbose) {
 		String smi = map.getField(owner, name);
-		if(smi != null && !smi.equals(name))
+		
+		Map<String, String> fieldDescriptorMap = fieldDescriptors.get(owner);
+		if(smi != null && !smi.equals(name) && (fieldDescriptorMap == null || fieldDescriptorMap.get(name).equals(desc)))
 			return smi;
+		
 		Set<String> inherits = supers.get(owner);
 		if(verbose)
 			System.out.println(owner+"/"+name+" inherits from "+inherits);
 		if(inherits != null) {
 			for(String s : inherits) {
-				smi = lookupInheritedField(s, name, verbose);
+				smi = resolveField(s, name, desc, verbose);
 				if(smi != null && !smi.equals(name))
 					return smi;
 			}
