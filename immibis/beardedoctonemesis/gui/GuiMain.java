@@ -4,13 +4,28 @@ import immibis.beardedoctonemesis.IProgressListener;
 import immibis.beardedoctonemesis.Main;
 import immibis.beardedoctonemesis.mcp.McpMapping;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 public class GuiMain extends JFrame {
 	private static final long serialVersionUID = 1;
@@ -171,6 +186,56 @@ public class GuiMain extends JFrame {
 		outputField = new JTextField();
 		mcpField = new JTextField();
 		
+		
+		File defaultPath  = new File(System.getProperty("user.dir"));
+		File inputPath    = defaultPath;
+		File outputPath   = defaultPath;
+		File mcpPath      = defaultPath;
+		
+		
+		// Handle .properties file, if one exists
+		try{
+		    Properties configFile = new Properties();
+		    configFile.load(new FileReader(".properties"));
+		    
+		    // Validate paths and update text fields
+	        String inputProp = configFile.getProperty("inputPath");
+	        if(inputProp != null && new File(inputProp).exists()){
+	            inputPath = new File(inputProp);
+	            inputField.setText(inputPath.toString());
+	        }
+	        else{
+	            System.out.println("inputPath property not specified or path not accessible");
+	        }
+		    
+	        String outputProp = configFile.getProperty("outputPath");
+	        if(outputProp != null && new File(outputProp).exists()){
+	            outputPath = new File(outputProp);
+	            outputField.setText(outputPath.toString());
+	        }
+	        else{
+	            System.out.println("outputPath property not specified or path not accessible");
+	        }
+		    
+		    String mcpProp = configFile.getProperty("mcpPath");
+		    if(mcpProp != null && new File(mcpProp).exists()){
+		        mcpPath = new File(mcpProp);
+		        mcpField.setText(mcpPath.toString());
+		    }
+		    else{
+		        System.out.println("mcpPath property not specified or path not accessible");
+		    }
+		    
+		}
+		catch(IOException e)
+		{
+		    System.out.println("No .properties file found.");
+		}
+		catch(NullPointerException e)
+		{
+		    System.out.println("Malformed .properties file.");
+		}
+		
 		sideSelect = new JComboBox<Side>(Side.values());
 		opSelect = new JComboBox<Operation>(Operation.values());
 		
@@ -211,11 +276,9 @@ public class GuiMain extends JFrame {
 		setContentPane(contentPane);
 		pack();
 		
-		Reference<File> defaultDir = new Reference<File>();
-		
-		chooseInputButton.addActionListener(new BrowseActionListener(inputField, true, this, false, defaultDir));
-		chooseOutputButton.addActionListener(new BrowseActionListener(outputField, false, this, false, defaultDir));
-		chooseMCPButton.addActionListener(new BrowseActionListener(mcpField, true, this, true, defaultDir));
+		chooseInputButton.addActionListener(new BrowseActionListener(inputField, true, this, false, inputPath));
+		chooseOutputButton.addActionListener(new BrowseActionListener(outputField, false, this, false, outputPath));
+		chooseMCPButton.addActionListener(new BrowseActionListener(mcpField, true, this, true, mcpPath));
 		
 		goButton.addActionListener(new ActionListener() {
 			@Override
