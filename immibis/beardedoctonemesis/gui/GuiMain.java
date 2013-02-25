@@ -9,6 +9,11 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.*;
 
@@ -129,14 +134,38 @@ public class GuiMain extends JFrame {
 		curTask.start();
 	}
 	
-	private static String getStackTraceMessage(Throwable e) {
-		String s = "An error has occurred - give immibis this stack trace (which has been copied to the clipboard)\n";
-		s += "\n" + e;
+	private static String getPrintableStackTrace(Throwable e, Set<StackTraceElement> stopAt) {
+		String s = e.toString();
+		int numPrinted = 0;
 		for(StackTraceElement ste : e.getStackTrace())
 		{
-			s += "\n\tat " + ste.toString();
-			if(ste.getClassName().startsWith("javax.swing."))
+			boolean stopHere = false;
+			if(stopAt.contains(ste) && numPrinted > 0)
+				stopHere = true;
+			else {
+				s += "\n    at " + ste.toString();
+				numPrinted++;
+				if(ste.getClassName().startsWith("javax.swing."))
+					stopHere = true;
+			}
+			
+			if(stopHere) {
+				int numHidden = e.getStackTrace().length - numPrinted;
+				s += "\n    ... "+numHidden+" more";
 				break;
+			}
+		}
+		return s;
+	}
+	
+	private static String getStackTraceMessage(Throwable e) {
+		String s = "An error has occurred - give immibis this stack trace (which has been copied to the clipboard)\n";
+		
+		s += "\n" + getPrintableStackTrace(e, Collections.<StackTraceElement>emptySet());
+		while(e.getCause() != null) {
+			Set<StackTraceElement> stopAt = new HashSet<StackTraceElement>(Arrays.asList(e.getStackTrace()));
+			e = e.getCause();
+			s += "\nCaused by: "+getPrintableStackTrace(e, stopAt);
 		}
 		return s;
 	}
