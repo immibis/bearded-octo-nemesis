@@ -119,7 +119,8 @@ public class Main {
 				if(!inEntry.getName().endsWith(".class") || isClassIgnored(fileToClass(inEntry.getName())))
 					continue;
 				
-				System.out.println(inEntry.getName());
+				if(progress == null)
+					System.out.println(inEntry.getName());
 				
 				buildClassInfo(new ClassReader(inZip));
 				inZip.closeEntry();
@@ -193,10 +194,12 @@ public class Main {
 				String oldName = fileToClass(inEntry.getName());
 				String newName = map.getClass(oldName);
 				
-				if(oldName.equals(newName))
-					System.out.println(oldName);
-				else
-					System.out.println(oldName+" -> "+newName);
+				if(progress == null) {
+					if(oldName.equals(newName))
+						System.out.println(oldName);
+					else
+						System.out.println(oldName+" -> "+newName);
+				}
 				
 				
 				
