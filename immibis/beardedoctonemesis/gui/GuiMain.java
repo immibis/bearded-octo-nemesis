@@ -140,6 +140,8 @@ public class GuiMain extends JFrame {
 						public void run() {
 							progressLabel.setText(" ");
 							progressBar.setValue(0);
+							
+							JOptionPane.showMessageDialog(GuiMain.this, "Done!", "BON", JOptionPane.INFORMATION_MESSAGE);
 						}
 					});
 				}
