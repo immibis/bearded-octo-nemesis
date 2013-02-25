@@ -25,6 +25,7 @@ public class GuiMain extends JFrame {
 	private JTextField inputField, outputField, mcpField;
 	private JButton goButton;
 	private JProgressBar progressBar;
+	private JLabel progressLabel;
 	
 	private Thread curTask = null;
 	
@@ -83,9 +84,10 @@ public class GuiMain extends JFrame {
 					m.xpathlist = xpathlist;
 					m.progress = new IProgressListener() {
 						@Override
-						public void start(final int max, String text) {
+						public void start(final int max, final String text) {
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
+									progressLabel.setText(text.equals("") ? " " : text);
 									progressBar.setMaximum(max);
 									progressBar.setValue(0);
 								}
@@ -123,10 +125,23 @@ public class GuiMain extends JFrame {
 					}
 					
 					System.err.println(s);
-					Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), null);
-					JOptionPane.showMessageDialog(GuiMain.this, s, "BON - Error", JOptionPane.ERROR_MESSAGE);
+					
+					final String errMsg = s;
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(errMsg), null);
+							JOptionPane.showMessageDialog(GuiMain.this, errMsg, "BON - Error", JOptionPane.ERROR_MESSAGE);
+						}
+					});
 				} finally {
-					progressBar.setValue(0);
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							progressLabel.setText(" ");
+							progressBar.setValue(0);
+						}
+					});
 				}
 			}
 		};
@@ -204,6 +219,7 @@ public class GuiMain extends JFrame {
 		opSelect = new JComboBox<Operation>(Operation.values());
 		
 		progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
+		progressLabel = new JLabel(" ", SwingConstants.LEFT);
 		
 		inputField.setMinimumSize(new Dimension(100, 0));
 		
@@ -236,6 +252,9 @@ public class GuiMain extends JFrame {
 		contentPane.add(goButton, gbc.clone());
 		gbc.gridy = 6;
 		contentPane.add(progressBar, gbc.clone());
+		
+		gbc.gridy = 7;
+		contentPane.add(progressLabel, gbc.clone());
 		
 		setContentPane(contentPane);
 		pack();

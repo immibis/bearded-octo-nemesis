@@ -162,7 +162,7 @@ public class Main {
 			
 			inZip = new ZipInputStream(new FileInputStream(input));
 			
-			if(progress != null) progress.start(countZipEntries(input), "");
+			if(progress != null) progress.start(countZipEntries(input), "Processing "+input.getName());
 			
 			int nProcessed = 0;
 			while(true) {
