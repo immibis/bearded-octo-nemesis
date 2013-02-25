@@ -8,17 +8,27 @@ import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.prefs.Preferences;
 
 import javax.swing.*;
 
 public class GuiMain extends JFrame {
 	private static final long serialVersionUID = 1;
+	
+	// The Java Preferences API is used to store the last directory the user was browsing
+	// for the input/output files (PREFS_KEY_BROWSEDIR)
+	// and the selected MCP directory (PREFS_KEY_MCPDIR).
+	// Prefs are saved when the user clicks "Go" or closes the window.
+	private final Preferences prefs = Preferences.userNodeForPackage(GuiMain.class);
+	private final static String PREFS_KEY_BROWSEDIR = "browseDir";
+	private final static String PREFS_KEY_MCPDIR = "mcpDir";
 	
 	private JComboBox<Operation> opSelect;
 	private JComboBox<Side>sideSelect;
@@ -29,10 +39,22 @@ public class GuiMain extends JFrame {
 	
 	private Thread curTask = null;
 	
+	// the last directory the user was browsing, for the input/output files
+	private final Reference<File> browseDir = new Reference<File>();
+	// the last directory the user was browsing, for the MCP directory
+	private final Reference<File> mcpBrowseDir = new Reference<File>();
+	
+	private void savePrefs() {
+		prefs.put(PREFS_KEY_BROWSEDIR, browseDir.val.toString());
+		prefs.put(PREFS_KEY_MCPDIR, mcpField.getText());
+	}
+	
 	synchronized void goButtonPressed() {
 		
 		if(curTask != null && curTask.isAlive())
 			return;
+		
+		savePrefs();
 		
 		//final Operation op = (Operation)opSelect.getSelectedItem();
 		final Side side = (Side)sideSelect.getSelectedItem();
@@ -261,16 +283,33 @@ public class GuiMain extends JFrame {
 		setContentPane(contentPane);
 		pack();
 		
-		Reference<File> defaultDir = new Reference<File>();
+		browseDir.val = new File(prefs.get(PREFS_KEY_BROWSEDIR, "."));
 		
-		chooseInputButton.addActionListener(new BrowseActionListener(inputField, true, this, false, defaultDir));
-		chooseOutputButton.addActionListener(new BrowseActionListener(outputField, false, this, false, defaultDir));
-		chooseMCPButton.addActionListener(new BrowseActionListener(mcpField, true, this, true, defaultDir));
+		{
+			String mcpDirString = prefs.get(PREFS_KEY_MCPDIR, ".");
+			mcpField.setText(mcpDirString);
+			
+			if(!mcpDirString.equals(""))
+				mcpBrowseDir.val = new File(mcpDirString);
+			else
+				mcpBrowseDir.val = new File(".");
+		}
+		
+		chooseInputButton.addActionListener(new BrowseActionListener(inputField, true, this, false, browseDir));
+		chooseOutputButton.addActionListener(new BrowseActionListener(outputField, false, this, false, browseDir));
+		chooseMCPButton.addActionListener(new BrowseActionListener(mcpField, true, this, true, mcpBrowseDir));
 		
 		goButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				goButtonPressed();
+			}
+		});
+		
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				savePrefs();
 			}
 		});
 		
