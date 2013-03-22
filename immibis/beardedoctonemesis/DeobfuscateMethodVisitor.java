@@ -99,7 +99,7 @@ public class DeobfuscateMethodVisitor extends MethodVisitor {
 		super.visitTableSwitchInsn(min, max, dflt, labels);
 	}
 	public void 	visitTryCatchBlock(Label start, Label end, Label handler, String type) {
-		super.visitTryCatchBlock(start, end, handler, type);
+		super.visitTryCatchBlock(start, end, handler, main.map.getClass(type));
 	}
 	public void 	visitTypeInsn(int opcode, String type) {
 		String deobf = type.charAt(0) == '[' ? main.deobfTypeDescriptor(type) : main.map.getClass(type);

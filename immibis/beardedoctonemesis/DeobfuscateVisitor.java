@@ -71,6 +71,9 @@ public class DeobfuscateVisitor extends ClassVisitor {
     	if(exceptions == null)
     		exceptions = new String[0];
     	
+    	for (int i = 0; i < exceptions.length; ++i) {
+            exceptions[i] = main.map.getClass(exceptions[i]);
+        }
     	List<String> newExceptions = new LinkedList<String>(Arrays.asList(exceptions));
     	newExceptions.addAll(main.map.getExceptions(inClassName, name, desc));
     	
