@@ -24,11 +24,6 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
 public class Main {
-	public static final String MCP_BASE = "C:/Users/Alex/mcp2/fdro-test-1.2.5/";
-	
-	public static final int CLIENT = 0;
-	public static final int SERVER = 1;
-	
 	public File base, input, output;
 	/*public ExcFile exc;
 	public SrgFile srg;
