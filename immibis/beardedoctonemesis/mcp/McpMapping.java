@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
+import immibis.beardedoctonemesis.Main;
 import immibis.beardedoctonemesis.Mapping;
 
 public class McpMapping {
@@ -47,7 +48,13 @@ public class McpMapping {
 			if(reobf) {
 				m.setMethod(clazz, getCsv(methods_csv, method_name), descriptor, e.getValue());
 			} else {
-				m.setMethod(clazz, method_name, descriptor, getCsv(methods_csv, e.getValue()));
+				
+				String obf_name = method_name;
+				String srg_name = e.getValue();
+				String deobf_name = getCsv(methods_csv, e.getValue());
+				
+				m.setMethod(clazz, obf_name, descriptor, deobf_name);
+				m.setMethod(srg_file.classes.get(clazz), srg_name, m.mapMethodDescriptor(descriptor), deobf_name); // for Forge mods using SRG names
 			}
 		}
 		
@@ -58,7 +65,13 @@ public class McpMapping {
 			if(reobf) {
 				m.setField(clazz, getCsv(fields_csv, name), e.getValue());
 			} else {
-				m.setField(clazz, name, getCsv(fields_csv, e.getValue()));
+				
+				String obf_name = name;
+				String srg_name = e.getValue();
+				String deobf_name = getCsv(fields_csv, e.getValue());
+				
+				m.setField(clazz, obf_name, deobf_name);
+				m.setField(srg_file.classes.get(clazz), srg_name, deobf_name); // for Forge mods using SRG names
 			}
 		}
 		

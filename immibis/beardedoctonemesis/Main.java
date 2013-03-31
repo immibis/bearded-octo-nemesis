@@ -36,6 +36,8 @@ public class Main {
 	public Map<String, String> fields, methods; // maps descriptors to final names*/
 	public String[] xpathlist;
 	
+	public List<String> warnings = new ArrayList<String>();
+	
 	public Collection<String> ignoredPrefixes = new HashSet<String>();
 	
 	public Map<String, Set<String>> supers = new HashMap<String, Set<String>>();
@@ -174,6 +176,10 @@ public class Main {
 				if(progress != null) progress.set(nProcessed++);
 				
 				if(!inEntry.getName().endsWith(".class") || isClassIgnored(fileToClass(inEntry.getName()))) {
+					
+					if(inEntry.getName().startsWith("META-INF/") || inEntry.getName().startsWith("/META-INF/"))
+						continue;
+					
 					//System.out.println("Copying "+inEntry.getName());
 					ZipEntry outEntry = new ZipEntry(inEntry.getName());
 					outZip.putNextEntry(outEntry);
@@ -327,6 +333,9 @@ public class Main {
 		m.map = mcp.getMapping();
 		m.xpathlist = (args.length < 6 ? new String[0] : args[5].split(File.pathSeparator));
 		m.run();
+		
+		for(String s : m.warnings)
+			System.err.println("[Warning] "+s);
 	}
 
 	public String deobfTypeDescriptor(String desc) {
@@ -338,35 +347,7 @@ public class Main {
 	}
 	
 	public String deobfMethodDescriptor(String desc) {
-		// some basic sanity checks, doesn't ensure it's completely valid though
-		if(desc.length() == 0 || desc.charAt(0) != '(' || desc.indexOf(")") < 1)
-			throw new IllegalArgumentException("Not a valid method descriptor: " + desc);
-		
-		int pos = 0;
-		String out = "";
-		while(pos < desc.length())
-		{
-			switch(desc.charAt(pos))
-			{
-			case 'V': case 'Z': case 'B': case 'C':
-			case 'S': case 'I': case 'J': case 'F':
-			case 'D': case '[': case '(': case ')':
-				out += desc.charAt(pos);
-				pos++;
-				break;
-			case 'L':
-				{
-					int end = desc.indexOf(';', pos);
-					String obf = desc.substring(pos + 1, end);
-					pos = end + 1;
-					out += "L" + map.getClass(obf) + ";";
-				}
-				break;
-			default:
-				throw new RuntimeException("Unknown method descriptor character: " + desc.charAt(pos) + " (in " + desc + ")");
-			}
-		}
-		return out;
+		return map.mapMethodDescriptor(desc);
 	}
 	
 	public String lookupInheritedMethod(String owner, String name, String desc) {
@@ -401,8 +382,25 @@ public class Main {
 		String smi = map.getField(owner, name);
 		
 		Map<String, String> fieldDescriptorMap = fieldDescriptors.get(owner);
-		if(smi != null && !smi.equals(name) && (fieldDescriptorMap == null || fieldDescriptorMap.get(name).equals(desc)))
-			return smi;
+		
+		if(smi != null && !smi.equals(name)) {
+			boolean fieldDescriptorMatches;
+			if(fieldDescriptorMap == null) {
+				fieldDescriptorMatches = true;
+				warnings.add("Unknown field descriptor for "+owner+"/"+name+" (trying to match "+desc+")");
+			} else {
+				String actualDesc = fieldDescriptorMap.get(name);
+				if(actualDesc == null) {
+					warnings.add("Unknown field descriptor for "+owner+"/"+name+" (trying to match "+desc+")");
+					fieldDescriptorMatches = true;
+				}
+				else
+					fieldDescriptorMatches = actualDesc.equals(desc);
+			}
+			
+			if(fieldDescriptorMatches)
+				return smi;
+		}
 		
 		Set<String> inherits = supers.get(owner);
 		if(verbose)

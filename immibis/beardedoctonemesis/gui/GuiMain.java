@@ -96,6 +96,8 @@ public class GuiMain extends JFrame {
 		
 		curTask = new Thread() {
 			public void run() {
+				final Reference<Boolean> anyWarnings = new Reference<Boolean>(false);
+				
 				try {
 					McpMapping mcp = new McpMapping(confDir, side.mcpside, false);
 					
@@ -126,6 +128,12 @@ public class GuiMain extends JFrame {
 						}
 					};
 					m.run();
+					
+					for(String s : m.warnings)
+						System.err.println("[Warning] "+s);
+					
+					anyWarnings.val = m.warnings.size() > 0;
+					
 				} catch(Exception e) {
 					String s = getStackTraceMessage(e);
 					
@@ -163,7 +171,15 @@ public class GuiMain extends JFrame {
 							progressLabel.setText(" ");
 							progressBar.setValue(0);
 							
-							JOptionPane.showMessageDialog(GuiMain.this, "Done!", "BON", JOptionPane.INFORMATION_MESSAGE);
+							if(anyWarnings.val)
+								JOptionPane.showMessageDialog(GuiMain.this,
+									"Completed with warnings. The output file might not be deobfuscated correctly.\n\n"
+									+"If the mod was obfuscated using SRG names, you must run the reobfuscate_srg script in MCP before deobfuscating a mod.\n"
+									+"Otherwise you must run the normal reobfuscate script.",
+									"BON",
+									JOptionPane.INFORMATION_MESSAGE);
+							else
+								JOptionPane.showMessageDialog(GuiMain.this, "Done!", "BON", JOptionPane.INFORMATION_MESSAGE);
 						}
 					});
 				}

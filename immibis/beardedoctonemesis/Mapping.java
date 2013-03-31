@@ -71,4 +71,36 @@ public class Mapping {
 	public void setDefaultPackage(String p) {
 		defaultPackage = p;
 	}
+
+	public String mapMethodDescriptor(String desc) {
+		// some basic sanity checks, doesn't ensure it's completely valid though
+		if(desc.length() == 0 || desc.charAt(0) != '(' || desc.indexOf(")") < 1)
+			throw new IllegalArgumentException("Not a valid method descriptor: " + desc);
+		
+		int pos = 0;
+		String out = "";
+		while(pos < desc.length())
+		{
+			switch(desc.charAt(pos))
+			{
+			case 'V': case 'Z': case 'B': case 'C':
+			case 'S': case 'I': case 'J': case 'F':
+			case 'D': case '[': case '(': case ')':
+				out += desc.charAt(pos);
+				pos++;
+				break;
+			case 'L':
+				{
+					int end = desc.indexOf(';', pos);
+					String obf = desc.substring(pos + 1, end);
+					pos = end + 1;
+					out += "L" + getClass(obf) + ";";
+				}
+				break;
+			default:
+				throw new RuntimeException("Unknown method descriptor character: " + desc.charAt(pos) + " (in " + desc + ")");
+			}
+		}
+		return out;
+	}
 }
