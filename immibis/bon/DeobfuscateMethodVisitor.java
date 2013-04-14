@@ -1,4 +1,4 @@
-package immibis.beardedoctonemesis;
+package immibis.bon;
 
 import org.objectweb.asm.*;
 

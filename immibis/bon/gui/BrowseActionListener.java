@@ -1,4 +1,4 @@
-package immibis.beardedoctonemesis.gui;
+package immibis.bon.gui;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;

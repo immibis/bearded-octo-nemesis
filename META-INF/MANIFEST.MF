@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Main-Class: immibis.beardedoctonemesis.gui.GuiMain
+Main-Class: immibis.bon.gui.GuiMain

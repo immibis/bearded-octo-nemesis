@@ -1,4 +1,4 @@
-package immibis.beardedoctonemesis;
+package immibis.bon;
 
 import java.util.HashMap;
 import java.util.Map;

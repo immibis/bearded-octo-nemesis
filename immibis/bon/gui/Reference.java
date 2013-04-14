@@ -1,4 +1,4 @@
-package immibis.beardedoctonemesis.gui;
+package immibis.bon.gui;
 
 public class Reference<T> {
 	public T val;

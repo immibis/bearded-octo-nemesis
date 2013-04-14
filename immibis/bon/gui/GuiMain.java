@@ -1,8 +1,8 @@
-package immibis.beardedoctonemesis.gui;
+package immibis.bon.gui;
 
-import immibis.beardedoctonemesis.IProgressListener;
-import immibis.beardedoctonemesis.Main;
-import immibis.beardedoctonemesis.mcp.McpMapping;
+import immibis.bon.IProgressListener;
+import immibis.bon.Main;
+import immibis.bon.mcp.McpMapping;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;

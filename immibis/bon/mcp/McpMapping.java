@@ -1,12 +1,12 @@
-package immibis.beardedoctonemesis.mcp;
+package immibis.bon.mcp;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
-import immibis.beardedoctonemesis.Main;
-import immibis.beardedoctonemesis.Mapping;
+import immibis.bon.Main;
+import immibis.bon.Mapping;
 
 public class McpMapping {
 	

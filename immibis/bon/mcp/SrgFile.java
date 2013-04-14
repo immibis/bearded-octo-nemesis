@@ -1,4 +1,4 @@
-package immibis.beardedoctonemesis.mcp;
+package immibis.bon.mcp;
 
 import java.io.*;
 import java.util.*;

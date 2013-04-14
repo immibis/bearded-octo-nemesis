@@ -1,7 +1,7 @@
-package immibis.beardedoctonemesis;
+package immibis.bon;
 
-import immibis.beardedoctonemesis.mcp.McpMapping;
-import immibis.beardedoctonemesis.mcp.Side;
+import immibis.bon.mcp.McpMapping;
+import immibis.bon.mcp.Side;
 
 import java.io.File;
 import java.io.FileInputStream;

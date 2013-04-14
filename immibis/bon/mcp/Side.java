@@ -1,4 +1,4 @@
-package immibis.beardedoctonemesis.mcp;
+package immibis.bon.mcp;
 
 public enum Side {
 	PACKAGED("packaged.srg", "packaged.exc", 2), // shouldn't really be a side, but it works for now

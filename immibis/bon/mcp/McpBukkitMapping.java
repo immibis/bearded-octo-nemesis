@@ -1,6 +1,7 @@
-package immibis.beardedoctonemesis.mcp;
+package immibis.bon.mcp;
 
-import immibis.beardedoctonemesis.Mapping;
+import immibis.bon.Mapping;
+
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
