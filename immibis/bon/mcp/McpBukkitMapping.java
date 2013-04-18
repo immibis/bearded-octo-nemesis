@@ -1,6 +1,6 @@
 package immibis.bon.mcp;
 
-import immibis.bon.Mapping;
+/*import immibis.bon.Mapping;
 
 import java.util.*;
 import java.io.File;
@@ -44,4 +44,4 @@ public class McpBukkitMapping extends McpMapping {
 		return m;
 	}
 
-}
+}*/

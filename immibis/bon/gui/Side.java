@@ -1,16 +1,17 @@
 package immibis.bon.gui;
 
+import immibis.bon.NameSet;
+
 public enum Side {
-	Universal(immibis.bon.mcp.Side.PACKAGED, "temp/client_reobf.jar"),
-	Universal_old(immibis.bon.mcp.Side.JOINED, "temp/client_reobf.jar"),
-	Client(immibis.bon.mcp.Side.CLIENT, "temp/client_reobf.jar"),
-	Server(immibis.bon.mcp.Side.SERVER, "temp/server_reobf.jar");
+	Universal(NameSet.Side.UNIVERSAL, "bin/minecraft"),
+	Client(NameSet.Side.CLIENT, "bin/minecraft"),
+	Server(NameSet.Side.SERVER, "bin/minecraft_server");
 	
-	private Side(immibis.bon.mcp.Side mcpside, String xpath) {
-		this.mcpside = mcpside;
-		this.xpath = xpath;
+	private Side(NameSet.Side nsside, String referencePath) {
+		this.nsside = nsside;
+		this.referencePath = referencePath;
 	}
 	
-	public final immibis.bon.mcp.Side mcpside;
-	public final String xpath;
+	public final NameSet.Side nsside;
+	public final String referencePath;
 }

@@ -9,6 +9,7 @@ public class ExcFile {
 	private static String[] EMPTY_STRING_ARRAY = new String[0];
 	
 	// returns internal names, can return null
+	// input uses SRG names
 	public String[] getExceptionClasses(String clazz, String func, String desc) {
 		String[] r = exceptions.get(clazz + "/" + func + desc);
 		if(r == null)

@@ -6,8 +6,8 @@ import java.util.*;
 public class SrgFile {
 	
 	public Map<String, String> classes = new HashMap<String, String>(); // name -> name
-	public Map<String, String> fields = new HashMap<String, String>(); // name -> name
-	public Map<String, String> methods = new HashMap<String, String>(); // name+desc -> name
+	public Map<String, String> fields = new HashMap<String, String>(); // owner/name -> name
+	public Map<String, String> methods = new HashMap<String, String>(); // owner/namedesc -> name
 	
 	public static String getLastComponent(String s) {
 		String[] parts = s.split("/");
@@ -15,7 +15,7 @@ public class SrgFile {
 	}
 
 	public SrgFile(File f, boolean reverse) throws IOException {
-		Scanner in = new Scanner(f);
+		Scanner in = new Scanner(new BufferedReader(new FileReader(f)));
 		try {
 			while(in.hasNextLine()) {
 				if(in.hasNext("CL:")) {

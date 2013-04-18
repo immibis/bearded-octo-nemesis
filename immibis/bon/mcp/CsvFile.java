@@ -6,7 +6,7 @@ import java.util.*;
 public abstract class CsvFile {
 	public static Map<String, String> read(File f, int n_side) throws IOException {
 		Map<String, String> data = new HashMap<String, String>();
-		Scanner in = new Scanner(f);
+		Scanner in = new Scanner(new BufferedReader(new FileReader(f)));
 		String s_side = String.valueOf(n_side);
 		try {
 			in.useDelimiter(",");

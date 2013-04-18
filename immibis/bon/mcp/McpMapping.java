@@ -32,7 +32,7 @@ public class McpMapping {
 	}
 	
 	public Mapping getMapping() {
-		Mapping m = new Mapping();
+		Mapping m = new Mapping(null, null);
 		
 		for(Map.Entry<String, String> e : srg_file.classes.entrySet()) {
 			m.setClass(e.getKey(), e.getValue());

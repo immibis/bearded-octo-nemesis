@@ -1,7 +1,16 @@
 package immibis.bon.gui;
 
+import immibis.bon.ClassCollection;
+import immibis.bon.ClassCollectionFactory;
 import immibis.bon.IProgressListener;
+import immibis.bon.JarLoader;
+import immibis.bon.JarWriter;
 import immibis.bon.Main;
+import immibis.bon.Mapping;
+import immibis.bon.MappingFactory;
+import immibis.bon.MappingLoader_MCP;
+import immibis.bon.NameSet;
+import immibis.bon.Remapper;
 import immibis.bon.mcp.McpMapping;
 
 import java.awt.*;
@@ -11,9 +20,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
@@ -61,7 +74,7 @@ public class GuiMain extends JFrame {
 		
 		final File mcpDir = new File(mcpField.getText());
 		final File confDir = new File(mcpDir, "conf");
-		final String[] xpathlist = side.xpath.split(File.pathSeparator);
+		final String[] refPathList = side.referencePath.split(File.pathSeparator);
 		
 		String error = null;
 		
@@ -69,22 +82,6 @@ public class GuiMain extends JFrame {
 			error = "MCP folder not found (at "+mcpDir+")";
 		else if(!confDir.isDirectory())
 			error = "'conf' folder not found in MCP folder (at "+confDir+")";
-		else
-		{
-			for(int k = 0; k < xpathlist.length; k++)
-			{
-				String path = xpathlist[k];
-				File xpathfile = new File(mcpDir, path);
-				if(!xpathfile.isFile())
-				{
-					error = "'" + path + "' not found in MCP folder (at "+xpathfile+")";
-					if(xpathfile.toString().endsWith("_reobf.jar"))
-						error += "\n\nYou need to reobfuscate before using BON.";
-					break;
-				}
-				xpathlist[k] = xpathfile.getAbsolutePath();
-			}
-		}
 		
 		if(error != null)
 		{
@@ -96,23 +93,21 @@ public class GuiMain extends JFrame {
 		
 		curTask = new Thread() {
 			public void run() {
-				final Reference<Boolean> anyWarnings = new Reference<Boolean>(false);
+				boolean crashed = false;
 				
 				try {
-					McpMapping mcp = new McpMapping(confDir, side.mcpside, false);
 					
-					Main m = new Main();
-					m.input = new File(inputField.getText());
-					m.output = new File(outputField.getText());
-					m.map = mcp.getMapping();
-					m.xpathlist = xpathlist;
-					m.progress = new IProgressListener() {
+					IProgressListener progress = new IProgressListener() {
+						private String currentText;
+						
 						@Override
 						public void start(final int max, final String text) {
+							currentText = text.equals("") ? " " : text;
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
-									progressLabel.setText(text.equals("") ? " " : text);
-									progressBar.setMaximum(max);
+									progressLabel.setText(currentText);
+									if(max >= 0)
+										progressBar.setMaximum(max);
 									progressBar.setValue(0);
 								}
 							});
@@ -126,18 +121,96 @@ public class GuiMain extends JFrame {
 								}
 							});
 						}
+						
+						@Override
+						public void setMax(final int max) {
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									progressBar.setMaximum(max);
+								}
+							});
+						}
 					};
+					
+					
+					
+					File inputFile = new File(inputField.getText());
+					File outputFile = new File(outputField.getText());
+					
+					String mcVer = MappingLoader_MCP.getMCVer(mcpDir);
+					
+					NameSet refNS = new NameSet(NameSet.Type.MCP, side.nsside, mcVer);
+					Map<String, ClassCollection> refCCList = new HashMap<>();
+					
+					for(String s : refPathList) {
+						File refPathFile = new File(mcpDir, s);
+						
+						progress.start(0, "Reading "+s);
+						refCCList.put(s, ClassCollectionFactory.loadClassCollection(refNS, refPathFile, progress));
+						
+						//progress.start(0, "Remapping "+s);
+						//refs.add(Remapper.remap(mcpRefCC, inputNS, Collections.<ClassCollection>emptyList(), progress));
+					}
+					
+					NameSet inputNS = new NameSet(NameSet.Type.OBF, side.nsside, mcVer);
+					
+					progress.start(0, "Reading "+inputFile.getName());
+					ClassCollection inputCC = ClassCollectionFactory.loadClassCollection(inputNS, inputFile, progress);
+					
+					progress.start(0, "Reading MCP configuration");
+					MappingFactory.registerMCPInstance(mcVer, side.nsside, mcpDir, progress);
+					
+					
+					
+					/*                       MCP reference
+					 *                       |           |
+					 *                       |           |
+					 *                       |           |
+					 *                       V           V
+					 *             OBF reference       SRG reference
+					 *                 |                     |
+					 *                 |                     |
+					 *                 V                     V
+					 * OBF input -----------> SRG input -----------> MCP input (output file)
+					 */
+					
+					
+					
+					// remap to obf names from searge names, then searge names to MCP names, in two steps
+					// the first will be a no-op if the mod uses searge names already
+					for(NameSet.Type outputType : new NameSet.Type[] {NameSet.Type.SRG, NameSet.Type.MCP}) {
+						NameSet outputNS = new NameSet(outputType, side.nsside, mcVer);
+						
+						List<ClassCollection> remappedRefs = new ArrayList<>();
+						for(Map.Entry<String, ClassCollection> e : refCCList.entrySet()) {
+							progress.start(0, "Remapping "+e.getKey()+" to "+outputType+" names");
+							remappedRefs.add(Remapper.remap(e.getValue(), inputCC.getNameSet(), Collections.<ClassCollection>emptyList(), progress));
+						}
+						
+						progress.start(0, "Remapping "+inputFile.getName()+" to "+outputType+" names");
+						inputCC = Remapper.remap(inputCC, outputNS, remappedRefs, progress);
+					}
+					
+					progress.start(0, "Writing "+outputFile.getName());
+					JarWriter.write(outputFile, inputCC, progress);
+					
+					/*Main m = new Main();
+					m.input = new File(inputField.getText());
+					m.output = new File(outputField.getText());
+					m.map = mcp.getMapping();
+					m.xpathlist = xpathlist;
+					m.progress = progress;
 					m.run();
 					
 					for(String s : m.warnings)
 						System.err.println("[Warning] "+s);
 					
-					anyWarnings.val = m.warnings.size() > 0;
+					anyWarnings.val = m.warnings.size() > 0;*/
 					
 				} catch(Exception e) {
 					String s = getStackTraceMessage(e);
 					
-					if(!new File(confDir, side.mcpside.srg_name).exists()) {
+					/*if(!new File(confDir, side.nsside.srg_name).exists()) {
 						s = side.mcpside.srg_name+" not found in conf directory. \n";
 						switch(side) {
 						case Client:
@@ -152,36 +225,35 @@ public class GuiMain extends JFrame {
 							s += "If you're not using Forge, set the side to Client or Server.\n";
 							break;
 						}
-					}
+					}*/
 					
 					System.err.println(s);
 					
+					crashed = true;
+					
 					final String errMsg = s;
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(errMsg), null);
-							JOptionPane.showMessageDialog(GuiMain.this, errMsg, "BON - Error", JOptionPane.ERROR_MESSAGE);
-						}
-					});
-				} finally {
 					SwingUtilities.invokeLater(new Runnable() {
 						@Override
 						public void run() {
 							progressLabel.setText(" ");
 							progressBar.setValue(0);
 							
-							if(anyWarnings.val)
-								JOptionPane.showMessageDialog(GuiMain.this,
-									"Completed with warnings. The output file might not be deobfuscated correctly.\n\n"
-									+"If the mod was obfuscated using SRG names, you must run the reobfuscate_srg script in MCP before deobfuscating a mod.\n"
-									+"Otherwise you must run the normal reobfuscate script.",
-									"BON",
-									JOptionPane.INFORMATION_MESSAGE);
-							else
-								JOptionPane.showMessageDialog(GuiMain.this, "Done!", "BON", JOptionPane.INFORMATION_MESSAGE);
+							Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(errMsg), null);
+							JOptionPane.showMessageDialog(GuiMain.this, errMsg, "BON - Error", JOptionPane.ERROR_MESSAGE);
 						}
 					});
+				} finally {
+					if(!crashed) {
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								progressLabel.setText(" ");
+								progressBar.setValue(0);
+								
+								JOptionPane.showMessageDialog(GuiMain.this, "Done!", "BON", JOptionPane.INFORMATION_MESSAGE);
+							}
+						});
+					}
 				}
 			}
 		};

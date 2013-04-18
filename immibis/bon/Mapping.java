@@ -3,12 +3,19 @@ package immibis.bon;
 import java.util.*;
 
 public class Mapping {
-	public Map<String, String> classes = new HashMap<String, String>();
-	public Map<String, String> methods = new HashMap<String, String>();
-	public Map<String, String> fields = new HashMap<String, String>();
-	public Map<String, List<String>> exceptions = new HashMap<String, List<String>>();
-	public Map<String, String> classPrefixes = new HashMap<String, String>();
-	public String defaultPackage = "";
+	private Map<String, String> classes = new HashMap<String, String>();
+	private Map<String, String> methods = new HashMap<String, String>();
+	private Map<String, String> fields = new HashMap<String, String>();
+	private Map<String, List<String>> exceptions = new HashMap<String, List<String>>();
+	private Map<String, String> classPrefixes = new HashMap<String, String>();
+	private String defaultPackage = "";
+	
+	public final NameSet fromNS, toNS;
+	
+	public Mapping(NameSet fromNS, NameSet toNS) {
+		this.fromNS = fromNS;
+		this.toNS = toNS;
+	}
 	
 	public void setClass(String in, String out) {
 		classes.put(in, out);
@@ -102,5 +109,13 @@ public class Mapping {
 			}
 		}
 		return out;
+	}
+	
+	public String mapTypeDescriptor(String in) {
+		if(in.startsWith("["))
+			return "[" + mapTypeDescriptor(in.substring(1));
+		if(in.startsWith("L") && in.endsWith(";"))
+			return "L" + getClass(in.substring(1, in.length() - 1)) + ";";
+		return in;
 	}
 }
