@@ -2,16 +2,12 @@ package immibis.bon.gui;
 
 import immibis.bon.ClassCollection;
 import immibis.bon.IProgressListener;
-import immibis.bon.Main;
-import immibis.bon.Mapping;
 import immibis.bon.NameSet;
 import immibis.bon.Remapper;
 import immibis.bon.io.ClassCollectionFactory;
-import immibis.bon.io.JarLoader;
 import immibis.bon.io.JarWriter;
 import immibis.bon.io.MappingFactory;
 import immibis.bon.mcp.MappingLoader_MCP;
-import immibis.bon.mcp.McpMapping;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
@@ -193,19 +189,6 @@ public class GuiMain extends JFrame {
 					
 					progress.start(0, "Writing "+outputFile.getName());
 					JarWriter.write(outputFile, inputCC, progress);
-					
-					/*Main m = new Main();
-					m.input = new File(inputField.getText());
-					m.output = new File(outputField.getText());
-					m.map = mcp.getMapping();
-					m.xpathlist = xpathlist;
-					m.progress = progress;
-					m.run();
-					
-					for(String s : m.warnings)
-						System.err.println("[Warning] "+s);
-					
-					anyWarnings.val = m.warnings.size() > 0;*/
 					
 				} catch(Exception e) {
 					String s = getStackTraceMessage(e);

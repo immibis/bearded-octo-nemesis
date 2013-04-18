@@ -4,12 +4,10 @@ import immibis.bon.IProgressListener;
 import immibis.bon.Mapping;
 import immibis.bon.NameSet;
 import immibis.bon.NameSet.Side;
-import immibis.bon.NameSet.Type;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +33,6 @@ public class MappingLoader_MCP {
 	private final String mcVer;
 	private final File mcpDir;
 	private final int sideNumber;
-	@SuppressWarnings("unused")
 	private final File srgFile, excFile;
 	
 	// forward: obf -> searge -> mcp

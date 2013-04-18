@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
 public class ClassCollection implements Cloneable {
