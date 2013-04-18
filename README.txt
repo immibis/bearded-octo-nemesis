@@ -1,12 +1,11 @@
 MAIN DOWNLOAD: http://dl.dropbox.com/u/2944265/mods/BON.jar
 
-You must install Forge (if necessary) and reobfuscate before using BON to deobfuscate a mod.
+You must install Forge (if necessary) and recompile before using BON to deobfuscate a mod.
 
-Compile into a jar file, or download the one from Github, and then run it to get the GUI version
-which can deobfuscate mods.
+Simple GUI version: Compile into a jar file, or download from the link above, then run it.
 
-For the command line version, use "java -cp nameofjarfile.jar immibis.beardedoctonemesis.Main"
-followed by the required arguments. With no arguments, it shows what the expected arguments are.
+Command line version (for experts only):
+	Run: java -cp BON.jar immibis.bon.gui.MCPRemap
+	for a detailed list of command-line arguments.
 
-Note that for digitally signed mods, you must delete META-INF after running this tool, or you will
-get an ArrayIndexOutOfBoundsException from FML.
+Now automatically deletes META-INF, you don't need to do that yourself.
