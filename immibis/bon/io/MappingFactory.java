@@ -1,6 +1,12 @@
-package immibis.bon;
+package immibis.bon.io;
 
-import immibis.bon.MappingLoader_MCP.CantLoadMCPMappingException;
+import immibis.bon.IProgressListener;
+import immibis.bon.JoinMapping;
+import immibis.bon.Mapping;
+import immibis.bon.NameSet;
+import immibis.bon.NameSet.Side;
+import immibis.bon.mcp.MappingLoader_MCP;
+import immibis.bon.mcp.MappingLoader_MCP.CantLoadMCPMappingException;
 
 import java.io.File;
 import java.io.IOException;

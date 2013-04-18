@@ -1,16 +1,16 @@
 package immibis.bon.gui;
 
 import immibis.bon.ClassCollection;
-import immibis.bon.ClassCollectionFactory;
 import immibis.bon.IProgressListener;
-import immibis.bon.JarLoader;
-import immibis.bon.JarWriter;
 import immibis.bon.Main;
 import immibis.bon.Mapping;
-import immibis.bon.MappingFactory;
-import immibis.bon.MappingLoader_MCP;
 import immibis.bon.NameSet;
 import immibis.bon.Remapper;
+import immibis.bon.io.ClassCollectionFactory;
+import immibis.bon.io.JarLoader;
+import immibis.bon.io.JarWriter;
+import immibis.bon.io.MappingFactory;
+import immibis.bon.mcp.MappingLoader_MCP;
 import immibis.bon.mcp.McpMapping;
 
 import java.awt.*;

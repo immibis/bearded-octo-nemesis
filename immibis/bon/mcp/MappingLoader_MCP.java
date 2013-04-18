@@ -1,9 +1,10 @@
-package immibis.bon;
+package immibis.bon.mcp;
 
+import immibis.bon.IProgressListener;
+import immibis.bon.Mapping;
+import immibis.bon.NameSet;
 import immibis.bon.NameSet.Side;
-import immibis.bon.mcp.CsvFile;
-import immibis.bon.mcp.ExcFile;
-import immibis.bon.mcp.SrgFile;
+import immibis.bon.NameSet.Type;
 
 import java.io.File;
 import java.io.IOException;

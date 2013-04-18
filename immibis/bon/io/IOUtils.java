@@ -1,4 +1,6 @@
-package immibis.bon;
+package immibis.bon.io;
+
+import immibis.bon.ClassFormatException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

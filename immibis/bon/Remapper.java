@@ -1,6 +1,7 @@
 package immibis.bon;
 
-import immibis.bon.MappingFactory.MappingUnavailableException;
+import immibis.bon.io.MappingFactory;
+import immibis.bon.io.MappingFactory.MappingUnavailableException;
 
 import java.io.IOException;
 import java.util.Collection;

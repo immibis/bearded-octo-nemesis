@@ -1,4 +1,9 @@
-package immibis.bon;
+package immibis.bon.io;
+
+import immibis.bon.ClassCollection;
+import immibis.bon.ClassFormatException;
+import immibis.bon.IProgressListener;
+import immibis.bon.NameSet;
 
 import java.io.File;
 import java.io.FileInputStream;
