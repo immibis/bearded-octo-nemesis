@@ -179,11 +179,15 @@ public class MappingLoader_MCP {
 			String srgName = entry.getKey();
 			String mcpName = entry.getValue();
 			
-			for(String srgOwner : srgFieldOwners.get(srgName)) {
-				String mcpOwner = srgOwner;
-				
-				forwardCSV.setField(srgOwner, srgName, mcpName);
-				reverseCSV.setField(mcpOwner, mcpName, srgName);
+			if(srgFieldOwners.get(srgName) == null)
+				System.out.println("Field exists in CSV but not in SRG: "+srgName+" (CSV name: "+mcpName+")");
+			else {
+				for(String srgOwner : srgFieldOwners.get(srgName)) {
+					String mcpOwner = srgOwner;
+					
+					forwardCSV.setField(srgOwner, srgName, mcpName);
+					reverseCSV.setField(mcpOwner, mcpName, srgName);
+				}
 			}
 		}
 		
@@ -191,13 +195,17 @@ public class MappingLoader_MCP {
 			String srgName = entry.getKey();
 			String mcpName = entry.getValue();
 			
-			for(String srgOwner : srgMethodOwners.get(srgName)) {
-				String srgDesc = srgMethodDescriptors.get(srgName);
-				String mcpOwner = srgOwner;
-				String mcpDesc = srgDesc;
-				
-				forwardCSV.setMethod(srgOwner, srgName, srgDesc, mcpName);
-				reverseCSV.setMethod(mcpOwner, mcpName, mcpDesc, srgName);
+			if(srgMethodOwners.get(srgName) == null) {
+				System.out.println("Method exists in CSV but not in SRG: "+srgName+" (CSV name: "+mcpName+")");
+			} else {
+				for(String srgOwner : srgMethodOwners.get(srgName)) {
+					String srgDesc = srgMethodDescriptors.get(srgName);
+					String mcpOwner = srgOwner;
+					String mcpDesc = srgDesc;
+					
+					forwardCSV.setMethod(srgOwner, srgName, srgDesc, mcpName);
+					reverseCSV.setMethod(mcpOwner, mcpName, mcpDesc, srgName);
+				}
 			}
 		}
 	}
