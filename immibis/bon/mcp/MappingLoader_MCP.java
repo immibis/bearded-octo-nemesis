@@ -106,6 +106,9 @@ public class MappingLoader_MCP {
 	private void loadSRGMapping() throws IOException, CantLoadMCPMappingException {
 		SrgFile srg = new SrgFile(srgFile, false);
 		
+		forwardSRG.setDefaultPackage("net/minecraft/src/");
+		reverseSRG.addPrefix("net/minecraft/src/", "");
+		
 		for(Map.Entry<String, String> entry : srg.classes.entrySet()) {
 			String obfClass = entry.getKey();
 			String srgClass = entry.getValue();
