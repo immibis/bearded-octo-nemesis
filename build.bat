@@ -5,7 +5,7 @@ if exist bin rmdir /S /Q bin
 mkdir bin
 
 echo *** Compiling BON class files...
-javac -d bin -sourcepath . immibis\beardedoctonemesis\gui\GuiMain.java
+javac -d bin -sourcepath . immibis\bon\gui\GuiMain.java
 
 echo *** Packing bon.jar...
 cd bin
