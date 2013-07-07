@@ -65,7 +65,7 @@ public class GuiMain extends JFrame {
 		
 		savePrefs();
 		
-		//final Operation op = (Operation)opSelect.getSelectedItem();
+		final Operation op = (Operation)opSelect.getSelectedItem();
 		final Side side = (Side)sideSelect.getSelectedItem();
 		
 		final File mcpDir = new File(mcpField.getText());
@@ -88,7 +88,7 @@ public class GuiMain extends JFrame {
 		progressBar.setValue(0);
 		
 		if(outputField.getText().equals(""))
-			outputField.setText(inputField.getText() + ".deobf");
+			outputField.setText(inputField.getText() + op.defaultNameSuffix);
 		
 		final File inputFile = new File(inputField.getText());
 		final File outputFile = new File(outputField.getText());
@@ -151,7 +151,35 @@ public class GuiMain extends JFrame {
 						//refs.add(Remapper.remap(mcpRefCC, inputNS, Collections.<ClassCollection>emptyList(), progress));
 					}
 					
-					NameSet inputNS = new NameSet(NameSet.Type.OBF, side.nsside, mcVer);
+					NameSet.Type[] remapTo;
+					NameSet.Type inputType;
+					
+					switch(op) {
+					case DeobfuscateMod:
+						inputType = NameSet.Type.OBF;
+						remapTo = new NameSet.Type[] {NameSet.Type.SRG, NameSet.Type.MCP};
+						break;
+						
+					case ReobfuscateMod:
+						inputType = NameSet.Type.MCP;
+						remapTo = new NameSet.Type[] {NameSet.Type.OBF};
+						break;
+						
+					case SRGifyMod:
+						inputType = NameSet.Type.OBF;
+						remapTo = new NameSet.Type[] {NameSet.Type.SRG};
+						break;
+						
+					case ReobfuscateModSRG:
+						inputType = NameSet.Type.MCP;
+						remapTo = new NameSet.Type[] {NameSet.Type.SRG};
+						break;
+						
+					default:
+						throw new AssertionError("operation = "+op+"?");
+					}
+					
+					NameSet inputNS = new NameSet(inputType, side.nsside, mcVer);
 					
 					progress.start(0, "Reading "+inputFile.getName());
 					ClassCollection inputCC = ClassCollectionFactory.loadClassCollection(inputNS, inputFile, progress);
@@ -161,6 +189,7 @@ public class GuiMain extends JFrame {
 					
 					
 					
+					// For deobfuscation:
 					/*                       MCP reference
 					 *                       |           |
 					 *                       |           |
@@ -175,15 +204,23 @@ public class GuiMain extends JFrame {
 					
 					
 					
+					
 					// remap to obf names from searge names, then searge names to MCP names, in two steps
 					// the first will be a no-op if the mod uses searge names already
-					for(NameSet.Type outputType : new NameSet.Type[] {NameSet.Type.SRG, NameSet.Type.MCP}) {
+					for(NameSet.Type outputType : remapTo) {
 						NameSet outputNS = new NameSet(outputType, side.nsside, mcVer);
 						
 						List<ClassCollection> remappedRefs = new ArrayList<>();
 						for(Map.Entry<String, ClassCollection> e : refCCList.entrySet()) {
-							progress.start(0, "Remapping "+e.getKey()+" to "+outputType+" names");
-							remappedRefs.add(Remapper.remap(e.getValue(), inputCC.getNameSet(), Collections.<ClassCollection>emptyList(), progress));
+							
+							if(inputCC.getNameSet().equals(e.getValue().getNameSet())) {
+								// no need to remap this
+								remappedRefs.add(e.getValue());
+								
+							} else {
+								progress.start(0, "Remapping "+e.getKey()+" to "+outputType+" names");
+								remappedRefs.add(Remapper.remap(e.getValue(), inputCC.getNameSet(), Collections.<ClassCollection>emptyList(), progress));
+							}
 						}
 						
 						progress.start(0, "Remapping "+inputFile.getName()+" to "+outputType+" names");
