@@ -87,6 +87,12 @@ public class GuiMain extends JFrame {
 		
 		progressBar.setValue(0);
 		
+		if(outputField.getText().equals(""))
+			outputField.setText(inputField.getText() + ".deobf");
+		
+		final File inputFile = new File(inputField.getText());
+		final File outputFile = new File(outputField.getText());
+		
 		curTask = new Thread() {
 			public void run() {
 				boolean crashed = false;
@@ -129,9 +135,6 @@ public class GuiMain extends JFrame {
 					};
 					
 					
-					
-					File inputFile = new File(inputField.getText());
-					File outputFile = new File(outputField.getText());
 					
 					String mcVer = MappingLoader_MCP.getMCVer(mcpDir);
 					
