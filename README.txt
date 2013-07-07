@@ -5,7 +5,7 @@ You must install Forge (if necessary) and recompile before using BON to deobfusc
 Simple GUI version: Compile into a jar file, or download from the link above, then run it.
 
 Command line version (for experts only):
-	Run: java -cp BON.jar immibis.bon.gui.MCPRemap
+	Run: java -cp BON.jar immibis.bon.cui.MCPRemap
 	for a detailed list of command-line arguments.
 
 Now automatically deletes META-INF, you don't need to do that yourself.
