@@ -66,13 +66,23 @@ public class MappingLoader_MCP {
 		case CLIENT:
 			sideNumber = 0;
 			srgFile = new File(mcpDir, "conf/client.srg");
-			excFile = new File(mcpDir, "conf/client.exc");
+			
+			if(new File(mcpDir, "conf/joined.exc").exists())
+				excFile = new File(mcpDir, "conf/joined.exc");
+			else
+				excFile = new File(mcpDir, "conf/client.exc");
+			
 			break;
 			
 		case SERVER:
 			sideNumber = 1;
 			srgFile = new File(mcpDir, "conf/server.srg");
-			excFile = new File(mcpDir, "conf/server.exc");
+			
+			if(new File(mcpDir, "conf/joined.exc").exists())
+				excFile = new File(mcpDir, "conf/joined.exc");
+			else
+				excFile = new File(mcpDir, "conf/server.exc");
+			
 			break;
 			
 		default: throw new AssertionError("side is "+side);
