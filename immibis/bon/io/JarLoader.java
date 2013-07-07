@@ -29,6 +29,10 @@ public class JarLoader {
 			JarEntry entry;
 			
 			while((entry = j_in.getNextJarEntry()) != null) {
+				
+				if(entry.isDirectory())
+					continue;
+				
 				String name = entry.getName();
 				
 				if(name.endsWith(".class")) {
