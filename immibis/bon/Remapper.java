@@ -27,7 +27,7 @@ import org.objectweb.asm.tree.TypeInsnNode;
 
 public class Remapper {
 	
-	public static final boolean DEBUG_FIELD_RESOLUTION = true;
+	public static final boolean DEBUG_FIELD_RESOLUTION = false;
 	
 	// returns actual owner of field
 	// or null if the field could not be resolved
