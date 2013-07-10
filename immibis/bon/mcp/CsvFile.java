@@ -15,8 +15,11 @@ public abstract class CsvFile {
 				String name = in.next();
 				String side = in.next();
 				/*String desc =*/ in.nextLine();
-				if(sideIn(Integer.parseInt(side), n_sides)) {
-					data.put(searge, name);
+				try {
+					if(sideIn(Integer.parseInt(side), n_sides)) {
+						data.put(searge, name);
+					}
+				} catch(NumberFormatException e) {
 				}
 			}
 		} finally {
