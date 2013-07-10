@@ -53,7 +53,7 @@ public class MappingLoader_MCP {
 		
 		switch(side) {
 		case UNIVERSAL:
-			sideNumbers = new int[] {2, 0};
+			sideNumbers = new int[] {2, 1, 0};
 			if(new File(mcpDir, "conf/packaged.srg").exists()) {
 				srgFile = new File(mcpDir, "conf/packaged.srg");
 				excFile = new File(mcpDir, "conf/packaged.exc");
