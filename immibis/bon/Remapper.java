@@ -27,6 +27,8 @@ import org.objectweb.asm.tree.TypeInsnNode;
 
 public class Remapper {
 	
+	public static final boolean DEBUG_FIELD_RESOLUTION = true;
+	
 	// returns actual owner of field
 	// or null if the field could not be resolved
 	private static String resolveField(Map<String, ClassNode> refClasses, String owner, String name, String desc, Mapping m) {
@@ -38,7 +40,7 @@ public class Remapper {
 		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-5.html#jvms-5.4.3.2
 		
 		for(FieldNode fn : cn.fields)
-			if(fn.name.equals(name) && fn.desc.equals(desc) && !m.getField(owner, name).equals(name))
+			if(fn.name.equals(name) && fn.desc.equals(desc))
 				return owner;
 		
 		for(String i : cn.interfaces) {
@@ -166,12 +168,19 @@ public class Remapper {
 							
 							String realOwner = resolveField(refClasses, fin.owner, fin.name, fin.desc, m);
 							
-							if(realOwner == null)
+							if(realOwner == null) {
 								realOwner = fin.owner;
+								if(DEBUG_FIELD_RESOLUTION)
+									System.out.print("Unable to resolve "+fin.owner+"/"+fin.name+":"+fin.desc+", assuming "+realOwner);
+							} else if(DEBUG_FIELD_RESOLUTION)
+								System.out.print("Resolved "+fin.owner+"/"+fin.name+":"+fin.desc+" in "+realOwner);
 							
 							fin.name = m.getField(realOwner, fin.name);
 							fin.desc = m.mapTypeDescriptor(fin.desc);
 							fin.owner = m.getClass(realOwner);
+							
+							if(DEBUG_FIELD_RESOLUTION)
+								System.out.println(", remapped to "+fin.owner+"/"+fin.name+":"+fin.desc);
 							
 						} else if(ain instanceof FrameNode) {
 							FrameNode fn = (FrameNode)ain;
