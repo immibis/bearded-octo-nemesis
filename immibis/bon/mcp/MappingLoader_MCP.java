@@ -32,7 +32,7 @@ public class MappingLoader_MCP {
 	@SuppressWarnings("unused")
 	private final String mcVer;
 	private final File mcpDir;
-	private final int sideNumber;
+	private final int[] sideNumbers;
 	private final File srgFile, excFile;
 	
 	// forward: obf -> searge -> mcp
@@ -53,7 +53,7 @@ public class MappingLoader_MCP {
 		
 		switch(side) {
 		case UNIVERSAL:
-			sideNumber = 2;
+			sideNumbers = new int[] {2, 0};
 			if(new File(mcpDir, "conf/packaged.srg").exists()) {
 				srgFile = new File(mcpDir, "conf/packaged.srg");
 				excFile = new File(mcpDir, "conf/packaged.exc");
@@ -64,7 +64,7 @@ public class MappingLoader_MCP {
 			break;
 			
 		case CLIENT:
-			sideNumber = 0;
+			sideNumbers = new int[] {0};
 			srgFile = new File(mcpDir, "conf/client.srg");
 			
 			if(new File(mcpDir, "conf/joined.exc").exists())
@@ -75,7 +75,7 @@ public class MappingLoader_MCP {
 			break;
 			
 		case SERVER:
-			sideNumber = 1;
+			sideNumbers = new int[] {1};
 			srgFile = new File(mcpDir, "conf/server.srg");
 			
 			if(new File(mcpDir, "conf/joined.exc").exists())
@@ -185,8 +185,8 @@ public class MappingLoader_MCP {
 	}
 	
 	private void loadCSVMapping() throws IOException, CantLoadMCPMappingException  {
-		Map<String, String> fieldNames = CsvFile.read(new File(mcpDir, "conf/fields.csv"), sideNumber);
-		Map<String, String> methodNames = CsvFile.read(new File(mcpDir, "conf/methods.csv"), sideNumber);
+		Map<String, String> fieldNames = CsvFile.read(new File(mcpDir, "conf/fields.csv"), sideNumbers);
+		Map<String, String> methodNames = CsvFile.read(new File(mcpDir, "conf/methods.csv"), sideNumbers);
 		
 		for(Map.Entry<String, String> entry : fieldNames.entrySet()) {
 			String srgName = entry.getKey();
