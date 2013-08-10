@@ -8,7 +8,6 @@ To run BON, just download the precompiled version or build the version off of th
 ## Usage
 NOTE: You must have a compiled and recompiled Forge copy to reference before using BON to deobfuscate a Forge mod!
 
-Command line version (for experts only):
-	Run `java -cp BON.jar immibis.bon.cui.MCPRemap` for a detailed list of command-line arguments.
+To access the command line version, run `java -cp BON.jar immibis.bon.cui.MCPRemap`. It will provide a detailed list of command-line arguments.
 
 BON automatically deletes the META-INF, so you don't need to do that yourself.
