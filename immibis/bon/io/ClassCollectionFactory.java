@@ -15,34 +15,24 @@ import org.objectweb.asm.tree.ClassNode;
 
 public class ClassCollectionFactory {
 	public static ClassCollection loadClassCollection(NameSet ns, File from, IProgressListener progress) throws IOException, ClassFormatException {
-		if(from.isDirectory()) {
+		if (from.isDirectory()) {
 			Collection<ClassNode> classes = new ArrayList<>();
 			loadFromDir("", from, classes);
 			return new ClassCollection(ns, classes);
-		}
-		else
-			return JarLoader.loadClassesFromJar(ns, from, progress);
+		} else return JarLoader.loadClassesFromJar(ns, from, progress);
 	}
-	
-	private static void loadFromDir(String prefix, File dir, Collection<ClassNode> result) throws IOException, ClassFormatException {
-		if(dir.isDirectory()) {
-			
-			if(!prefix.equals(""))
-				prefix += "/";
-			
-			for(String fn : dir.list()) {
-				loadFromDir(prefix + fn, new File(dir, fn), result);
-			}
-			
-		} else if(prefix.endsWith(".class")) {
+
+	static void loadFromDir(String prefix, File dir,
+			Collection<ClassNode> result) throws IOException,
+			ClassFormatException {
+		if (dir.isDirectory()) {
+			if (!prefix.equals("")) prefix += "/";
+			for (String fn : dir.list()) loadFromDir(prefix + fn, new File(dir, fn), result);
+		} else if (prefix.endsWith(".class"))
 			try (FileInputStream in = new FileInputStream(dir)) {
 				ClassNode cn = IOUtils.readClass(IOUtils.readStreamFully(in));
-				
-				if(!prefix.equals(cn.name + ".class"))
-					throw new ClassFormatException("Class '"+cn.name+"' has wrong path in folder: '"+prefix+"'");
-				
+				if (!prefix.equals(cn.name + ".class")) throw new ClassFormatException("Class '" + cn.name + "' has wrong path in folder: '" + prefix + "'");
 				result.add(cn);
 			}
-		}
 	}
 }
