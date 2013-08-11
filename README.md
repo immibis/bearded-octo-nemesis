@@ -1,5 +1,5 @@
 # BON
-The amazingly fast decompiler for Minecraft mods!
+The amazingly fast deobfuscator for Minecraft mods!
 
 Get the precompiled version here: http://dl.dropbox.com/u/2944265/mods/BON.jar
 
