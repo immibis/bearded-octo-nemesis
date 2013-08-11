@@ -5,15 +5,17 @@ public enum Operation {
 	ReobfuscateMod("Reobfuscate mod", ".reobf"),
 	ReobfuscateModSRG("Reobfuscate mod to SRG", ".srg"),
 	SRGifyMod("Deobfuscate mod to SRG", ".srg");
-	
-	private Operation(String str, String suffix) {
+
+	final String str;
+
+	public final String defaultNameSuffix;
+
+	Operation(String str, String suffix) {
 		this.str = str;
 		this.defaultNameSuffix = suffix;
 	}
-	
-	private final String str;
-	public String toString() {return str;}
-	
-	public final String defaultNameSuffix;
-	
+
+	public String toString() {
+		return str;
+	}
 }

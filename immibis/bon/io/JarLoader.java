@@ -18,42 +18,32 @@ import java.util.jar.JarInputStream;
 import org.objectweb.asm.tree.ClassNode;
 
 public class JarLoader {
-	
-	private static final boolean VERIFY_SIGNATURES = false;
-	
+	static final boolean VERIFY_SIGNATURES = false;
+
 	public static ClassCollection loadClassesFromJar(NameSet nameSet, File jarFile, IProgressListener progress) throws IOException, ClassFormatException {
 		Collection<ClassNode> classes = new ArrayList<>();
 		Map<String, byte[]> extraFiles = new HashMap<>();
-		
+
 		try (JarInputStream j_in = new JarInputStream(new FileInputStream(jarFile), VERIFY_SIGNATURES)) {
 			JarEntry entry;
-			
-			while((entry = j_in.getNextJarEntry()) != null) {
-				
-				if(entry.isDirectory())
-					continue;
-				
+
+			while ((entry = j_in.getNextJarEntry()) != null) {
+				if (entry.isDirectory()) continue;
+
 				String name = entry.getName();
-				
-				if(name.endsWith(".class")) {
+
+				if (name.endsWith(".class")) {
 					try {
 						ClassNode cn = IOUtils.readClass(IOUtils.readStreamFully(j_in));
-						
-						if(!name.equals(cn.name + ".class"))
-							throw new ClassFormatException("Class '"+cn.name+"' has wrong path in jar file: '"+name+"'");
-						
+						if (!name.equals(cn.name + ".class")) throw new ClassFormatException("Class '" + cn.name + "' has wrong path in jar file: '" + name + "'");
 						classes.add(cn);
-						
-					} catch(ClassFormatException e) {
-						throw new ClassFormatException("Unable to parse class file: "+name+" in "+jarFile.getName(), e);
+					} catch (ClassFormatException e) {
+						throw new ClassFormatException("Unable to parse class file: " + name + " in " + jarFile.getName(), e);
 					}
-				} else {
-					
-					extraFiles.put(name, IOUtils.readStreamFully(j_in));
-				}
+				} else extraFiles.put(name, IOUtils.readStreamFully(j_in));
 			}
 		}
-		
+
 		ClassCollection cc = new ClassCollection(nameSet, classes);
 		cc.getExtraFiles().putAll(extraFiles);
 		return cc;
