@@ -1,9 +1,5 @@
 package immibis.bon;
 
-import immibis.bon.mcp.MappingFactory;
-import immibis.bon.mcp.MappingFactory.MappingUnavailableException;
-
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,11 +30,10 @@ public class Remapper {
 	
 	// returns actual owner of field
 	// or null if the field could not be resolved
-	private static String resolveField(Map<String, ClassNode> refClasses, String owner, String name, String desc, Mapping m, boolean debug) {
+	private static String resolveField(Map<String, ClassNode> refClasses, String owner, String name, String desc, Mapping m) {
 		
 		ClassNode cn = refClasses.get(owner);
 		if(cn == null) {
-			if(debug) System.out.println(owner+" not found in refClasses");
 			return null;
 		}
 		
@@ -46,22 +41,17 @@ public class Remapper {
 		
 		for(FieldNode fn : cn.fields)
 			if(fn.name.equals(name) && fn.desc.equals(desc)) {
-				if(debug) System.out.println("matched in "+owner);
 				return owner;
 			}
 		
 		for(String i : cn.interfaces) {
-			String result = resolveField(refClasses, i, name, desc, m, debug);
+			String result = resolveField(refClasses, i, name, desc, m);
 			if(result != null) {
-				if(debug) System.out.println("matched in interface "+i);
 				return result;
 			}
-			if(debug) System.out.println("no match in interface "+i);
 		}
 		
-		if(debug) System.out.println("no match in "+owner+" or interfaces, trying superclass");
-		
-		return resolveField(refClasses, cn.superName, name, desc, m, debug);
+		return resolveField(refClasses, cn.superName, name, desc, m);
 		
 	}
 	
@@ -178,26 +168,14 @@ public class Remapper {
 						if(ain instanceof FieldInsnNode) {
 							FieldInsnNode fin = (FieldInsnNode)ain;
 							
-							boolean debugThis = false && fin.name.equals(DEBUG_FIELD_RESOLUTION);
+							String realOwner = resolveField(refClasses, fin.owner, fin.name, fin.desc, m);
 							
-							if(debugThis)
-								debugThis = true; // set breakpoint here
-							
-							String realOwner = resolveField(refClasses, fin.owner, fin.name, fin.desc, m, debugThis);
-							
-							if(realOwner == null) {
+							if(realOwner == null)
 								realOwner = fin.owner;
-								if(debugThis)
-									System.out.print("Unable to resolve "+fin.owner+"/"+fin.name+":"+fin.desc+", assuming "+realOwner);
-							} else if(debugThis)
-								System.out.print("Resolved "+fin.owner+"/"+fin.name+":"+fin.desc+" in "+realOwner);
 							
 							fin.name = m.getField(realOwner, fin.name);
 							fin.desc = m.mapTypeDescriptor(fin.desc);
 							fin.owner = m.getClass(realOwner);
-							
-							if(debugThis)
-								System.out.println(", remapped to "+fin.owner+"/"+fin.name+":"+fin.desc);
 							
 						} else if(ain instanceof FrameNode) {
 							FrameNode fn = (FrameNode)ain;

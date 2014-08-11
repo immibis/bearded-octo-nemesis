@@ -1,7 +1,6 @@
 package immibis.bon.cui;
 
 import immibis.bon.ClassCollection;
-import immibis.bon.NameSet;
 import immibis.bon.Remapper;
 import immibis.bon.io.ClassCollectionFactory;
 import immibis.bon.io.JarWriter;
@@ -27,6 +26,7 @@ public class MCPRemap extends CUIBase {
 		}
 	}
 	
+	@Override
 	protected void run() throws Exception {
 		Timer timer = new Timer();
 		int readTime = 0, remapTime = 0, writeTime = 0;
@@ -95,6 +95,7 @@ public class MCPRemap extends CUIBase {
 	          
 	private List<RefOption> refOptsParsed = new ArrayList<>();
 	
+	@Override
 	protected boolean checkOptions() throws Exception {
 		if(!super.checkOptions())
 			return false;
@@ -147,6 +148,7 @@ public class MCPRemap extends CUIBase {
 	
 
 	
+	@Override
 	protected void showUsage() {
 		System.out.println("Usage:");
 		System.out.println("  java -cp BON.jar immibis.bon.cui.MCPRemap <option>...");

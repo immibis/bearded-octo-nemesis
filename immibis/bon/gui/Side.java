@@ -1,6 +1,5 @@
 package immibis.bon.gui;
 
-import immibis.bon.NameSet;
 import immibis.bon.mcp.MinecraftNameSet;
 
 public enum Side {
