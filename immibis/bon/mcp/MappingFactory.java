@@ -1,10 +1,9 @@
-package immibis.bon.io;
+package immibis.bon.mcp;
 
 import immibis.bon.IProgressListener;
 import immibis.bon.JoinMapping;
 import immibis.bon.Mapping;
 import immibis.bon.NameSet;
-import immibis.bon.mcp.MappingLoader_MCP;
 import immibis.bon.mcp.MappingLoader_MCP.CantLoadMCPMappingException;
 
 import java.io.File;
@@ -28,12 +27,12 @@ public class MappingFactory {
 	
 	private static Map<String, MappingLoader_MCP> mcpInstances = new HashMap<>();
 	
-	public static void registerMCPInstance(String mcVersion, NameSet.Side side, File mcpPath, IProgressListener progress) throws IOException, CantLoadMCPMappingException {
+	public static void registerMCPInstance(String mcVersion, MinecraftNameSet.Side side, File mcpPath, IProgressListener progress) throws IOException, CantLoadMCPMappingException {
 		mcpInstances.put(mcVersion+" "+side, new MappingLoader_MCP(mcVersion, side, mcpPath, progress));
 	}
 
 	@SuppressWarnings("incomplete-switch")
-	public static Mapping getMapping(NameSet from, NameSet to, IProgressListener progress) throws MappingUnavailableException {
+	public static Mapping getMapping(MinecraftNameSet from, MinecraftNameSet to, IProgressListener progress) throws MappingUnavailableException {
 		if(!from.mcVersion.equals(to.mcVersion))
 			throw new MappingUnavailableException(from, to, "different Minecraft version");
 		

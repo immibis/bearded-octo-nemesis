@@ -6,8 +6,9 @@ import immibis.bon.NameSet;
 import immibis.bon.Remapper;
 import immibis.bon.io.ClassCollectionFactory;
 import immibis.bon.io.JarWriter;
-import immibis.bon.io.MappingFactory;
+import immibis.bon.mcp.MappingFactory;
 import immibis.bon.mcp.MappingLoader_MCP;
+import immibis.bon.mcp.MinecraftNameSet;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
@@ -138,7 +139,7 @@ public class GuiMain extends JFrame {
 					
 					String mcVer = MappingLoader_MCP.getMCVer(mcpDir);
 					
-					NameSet refNS = new NameSet(NameSet.Type.MCP, side.nsside, mcVer);
+					MinecraftNameSet refNS = new MinecraftNameSet(MinecraftNameSet.Type.MCP, side.nsside, mcVer);
 					Map<String, ClassCollection> refCCList = new HashMap<>();
 					
 					for(String s : refPathList) {
@@ -151,35 +152,35 @@ public class GuiMain extends JFrame {
 						//refs.add(Remapper.remap(mcpRefCC, inputNS, Collections.<ClassCollection>emptyList(), progress));
 					}
 					
-					NameSet.Type[] remapTo;
-					NameSet.Type inputType;
+					MinecraftNameSet.Type[] remapTo;
+					MinecraftNameSet.Type inputType;
 					
 					switch(op) {
 					case DeobfuscateMod:
-						inputType = NameSet.Type.OBF;
-						remapTo = new NameSet.Type[] {NameSet.Type.SRG, NameSet.Type.MCP};
+						inputType = MinecraftNameSet.Type.OBF;
+						remapTo = new MinecraftNameSet.Type[] {MinecraftNameSet.Type.SRG, MinecraftNameSet.Type.MCP};
 						break;
 						
 					case ReobfuscateMod:
-						inputType = NameSet.Type.MCP;
-						remapTo = new NameSet.Type[] {NameSet.Type.OBF};
+						inputType = MinecraftNameSet.Type.MCP;
+						remapTo = new MinecraftNameSet.Type[] {MinecraftNameSet.Type.OBF};
 						break;
 						
 					case SRGifyMod:
-						inputType = NameSet.Type.OBF;
-						remapTo = new NameSet.Type[] {NameSet.Type.SRG};
+						inputType = MinecraftNameSet.Type.OBF;
+						remapTo = new MinecraftNameSet.Type[] {MinecraftNameSet.Type.SRG};
 						break;
 						
 					case ReobfuscateModSRG:
-						inputType = NameSet.Type.MCP;
-						remapTo = new NameSet.Type[] {NameSet.Type.SRG};
+						inputType = MinecraftNameSet.Type.MCP;
+						remapTo = new MinecraftNameSet.Type[] {MinecraftNameSet.Type.SRG};
 						break;
 						
 					default:
 						throw new AssertionError("operation = "+op+"?");
 					}
 					
-					NameSet inputNS = new NameSet(inputType, side.nsside, mcVer);
+					NameSet inputNS = new MinecraftNameSet(inputType, side.nsside, mcVer);
 					
 					progress.start(0, "Reading "+inputFile.getName());
 					ClassCollection inputCC = ClassCollectionFactory.loadClassCollection(inputNS, inputFile, progress);
@@ -207,8 +208,8 @@ public class GuiMain extends JFrame {
 					
 					// remap to obf names from searge names, then searge names to MCP names, in two steps
 					// the first will be a no-op if the mod uses searge names already
-					for(NameSet.Type outputType : remapTo) {
-						NameSet outputNS = new NameSet(outputType, side.nsside, mcVer);
+					for(MinecraftNameSet.Type outputType : remapTo) {
+						MinecraftNameSet outputNS = new MinecraftNameSet(outputType, side.nsside, mcVer);
 						
 						List<ClassCollection> remappedRefs = new ArrayList<>();
 						for(Map.Entry<String, ClassCollection> e : refCCList.entrySet()) {
@@ -219,12 +220,12 @@ public class GuiMain extends JFrame {
 								
 							} else {
 								progress.start(0, "Remapping "+e.getKey()+" to "+outputType+" names");
-								remappedRefs.add(Remapper.remap(e.getValue(), inputCC.getNameSet(), Collections.<ClassCollection>emptyList(), progress));
+								remappedRefs.add(Remapper.remap(e.getValue(), MappingFactory.getMapping((MinecraftNameSet)e.getValue().getNameSet(), (MinecraftNameSet)inputCC.getNameSet(), null), Collections.<ClassCollection>emptyList(), progress));
 							}
 						}
 						
 						progress.start(0, "Remapping "+inputFile.getName()+" to "+outputType+" names");
-						inputCC = Remapper.remap(inputCC, outputNS, remappedRefs, progress);
+						inputCC = Remapper.remap(inputCC, MappingFactory.getMapping((MinecraftNameSet)inputCC.getNameSet(), outputNS, null), remappedRefs, progress);
 					}
 					
 					progress.start(0, "Writing "+outputFile.getName());

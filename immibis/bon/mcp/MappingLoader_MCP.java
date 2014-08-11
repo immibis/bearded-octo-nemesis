@@ -3,7 +3,7 @@ package immibis.bon.mcp;
 import immibis.bon.IProgressListener;
 import immibis.bon.Mapping;
 import immibis.bon.NameSet;
-import immibis.bon.NameSet.Side;
+import immibis.bon.mcp.MinecraftNameSet.Side;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,9 +88,9 @@ public class MappingLoader_MCP {
 		default: throw new AssertionError("side is "+side);
 		}
 		
-		NameSet obfNS = new NameSet(NameSet.Type.OBF, side, mcVer);
-		NameSet srgNS = new NameSet(NameSet.Type.SRG, side, mcVer);
-		NameSet mcpNS = new NameSet(NameSet.Type.MCP, side, mcVer);
+		NameSet obfNS = new MinecraftNameSet(MinecraftNameSet.Type.OBF, side, mcVer);
+		NameSet srgNS = new MinecraftNameSet(MinecraftNameSet.Type.SRG, side, mcVer);
+		NameSet mcpNS = new MinecraftNameSet(MinecraftNameSet.Type.MCP, side, mcVer);
 		
 		forwardSRG = new Mapping(obfNS, srgNS);
 		reverseSRG = new Mapping(srgNS, obfNS);

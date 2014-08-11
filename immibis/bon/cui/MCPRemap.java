@@ -5,8 +5,9 @@ import immibis.bon.NameSet;
 import immibis.bon.Remapper;
 import immibis.bon.io.ClassCollectionFactory;
 import immibis.bon.io.JarWriter;
-import immibis.bon.io.MappingFactory;
+import immibis.bon.mcp.MappingFactory;
 import immibis.bon.mcp.MappingLoader_MCP;
+import immibis.bon.mcp.MinecraftNameSet;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,12 +37,12 @@ public class MCPRemap extends CUIBase {
 		MappingFactory.registerMCPInstance(mcVer, side, mcpDir, null);
 		readTime += timer.flip();
 		
-		NameSet inputNS = new NameSet(fromType, side, mcVer);
-		NameSet outputNS = new NameSet(toType, side, mcVer);
+		MinecraftNameSet inputNS = new MinecraftNameSet(fromType, side, mcVer);
+		MinecraftNameSet outputNS = new MinecraftNameSet(toType, side, mcVer);
 		
 		List<ClassCollection> refs = new ArrayList<>();
 		for(RefOption ro : refOptsParsed) {
-			NameSet refNS = new NameSet(ro.type, side, mcVer);
+			MinecraftNameSet refNS = new MinecraftNameSet(ro.type, side, mcVer);
 		
 			System.out.println("Loading "+ro.file);
 			ClassCollection refCC = ClassCollectionFactory.loadClassCollection(refNS, ro.file, null);
@@ -49,7 +50,7 @@ public class MCPRemap extends CUIBase {
 			
 			if(!refNS.equals(inputNS)) {
 				System.out.println("Remapping "+ro.file+" ("+refNS+" -> "+inputNS+")");
-				refCC = Remapper.remap(refCC, inputNS, Collections.<ClassCollection>emptyList(), null);
+				refCC = Remapper.remap(refCC, MappingFactory.getMapping((MinecraftNameSet)refCC.getNameSet(), inputNS, null), Collections.<ClassCollection>emptyList(), null);
 				remapTime += timer.flip();
 			}
 			
@@ -61,7 +62,7 @@ public class MCPRemap extends CUIBase {
 		readTime += timer.flip();
 		
 		System.out.println("Remapping "+inFile+" ("+inputNS+" -> "+outputNS+")");
-		ClassCollection outputCC = Remapper.remap(inputCC, outputNS, refs, null);
+		ClassCollection outputCC = Remapper.remap(inputCC, MappingFactory.getMapping((MinecraftNameSet)inputCC.getNameSet(), outputNS, null), refs, null);
 		remapTime += timer.flip();
 		
 		System.out.println("Writing "+outFile);
@@ -74,19 +75,19 @@ public class MCPRemap extends CUIBase {
 	
 	
 	@Required @Option("-mcp")	public File mcpDir;
-	@Required @Option("-from")	public NameSet.Type fromType;
-	@Required @Option("-to")	public NameSet.Type toType;
-	@Required @Option("-side")	public NameSet.Side side;
+	@Required @Option("-from")	public MinecraftNameSet.Type fromType;
+	@Required @Option("-to")	public MinecraftNameSet.Type toType;
+	@Required @Option("-side")	public MinecraftNameSet.Side side;
 	@Required @Option("-in")	public File inFile;
 	@Required @Option("-out")	public File outFile;
 	          @Option("-ref")	public List<String> refOpts = new ArrayList<>();
 	          @Option("-refn")	public List<String> refnOpts = new ArrayList<>();
 	
     private static class RefOption {
-    	public NameSet.Type type;
+    	public MinecraftNameSet.Type type;
     	public File file;
     	
-    	public RefOption(NameSet.Type t, File f) {
+    	public RefOption(MinecraftNameSet.Type t, File f) {
     		type = t;
     		file = f;
     	}
@@ -126,7 +127,7 @@ public class MCPRemap extends CUIBase {
 				ok = false;
 			} else {
 				try {
-					refOptsParsed.add(new RefOption(NameSet.Type.valueOf(p[0]), new File(p[1])));
+					refOptsParsed.add(new RefOption(MinecraftNameSet.Type.valueOf(p[0]), new File(p[1])));
 				} catch(EnumConstantNotPresentException e) {
 					System.err.println("Invalid name type: " + p[0]);
 					ok = false;

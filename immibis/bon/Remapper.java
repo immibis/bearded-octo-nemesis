@@ -1,18 +1,20 @@
 package immibis.bon;
 
-import immibis.bon.io.MappingFactory;
-import immibis.bon.io.MappingFactory.MappingUnavailableException;
+import immibis.bon.mcp.MappingFactory;
+import immibis.bon.mcp.MappingFactory.MappingUnavailableException;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -22,34 +24,44 @@ import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.MultiANewArrayInsnNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 
 public class Remapper {
 	
-	public static final boolean DEBUG_FIELD_RESOLUTION = false;
+	public static final String DEBUG_FIELD_RESOLUTION = "field_78090_t";
 	
 	// returns actual owner of field
 	// or null if the field could not be resolved
-	private static String resolveField(Map<String, ClassNode> refClasses, String owner, String name, String desc, Mapping m) {
+	private static String resolveField(Map<String, ClassNode> refClasses, String owner, String name, String desc, Mapping m, boolean debug) {
 		
 		ClassNode cn = refClasses.get(owner);
-		if(cn == null)
+		if(cn == null) {
+			if(debug) System.out.println(owner+" not found in refClasses");
 			return null;
+		}
 		
 		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-5.html#jvms-5.4.3.2
 		
 		for(FieldNode fn : cn.fields)
-			if(fn.name.equals(name) && fn.desc.equals(desc))
+			if(fn.name.equals(name) && fn.desc.equals(desc)) {
+				if(debug) System.out.println("matched in "+owner);
 				return owner;
+			}
 		
 		for(String i : cn.interfaces) {
-			String result = resolveField(refClasses, i, name, desc, m);
-			if(result != null)
+			String result = resolveField(refClasses, i, name, desc, m, debug);
+			if(result != null) {
+				if(debug) System.out.println("matched in interface "+i);
 				return result;
+			}
+			if(debug) System.out.println("no match in interface "+i);
 		}
 		
-		return resolveField(refClasses, cn.superName, name, desc, m);
+		if(debug) System.out.println("no match in "+owner+" or interfaces, trying superclass");
+		
+		return resolveField(refClasses, cn.superName, name, desc, m, debug);
 		
 	}
 	
@@ -166,20 +178,25 @@ public class Remapper {
 						if(ain instanceof FieldInsnNode) {
 							FieldInsnNode fin = (FieldInsnNode)ain;
 							
-							String realOwner = resolveField(refClasses, fin.owner, fin.name, fin.desc, m);
+							boolean debugThis = false && fin.name.equals(DEBUG_FIELD_RESOLUTION);
+							
+							if(debugThis)
+								debugThis = true; // set breakpoint here
+							
+							String realOwner = resolveField(refClasses, fin.owner, fin.name, fin.desc, m, debugThis);
 							
 							if(realOwner == null) {
 								realOwner = fin.owner;
-								if(DEBUG_FIELD_RESOLUTION)
+								if(debugThis)
 									System.out.print("Unable to resolve "+fin.owner+"/"+fin.name+":"+fin.desc+", assuming "+realOwner);
-							} else if(DEBUG_FIELD_RESOLUTION)
+							} else if(debugThis)
 								System.out.print("Resolved "+fin.owner+"/"+fin.name+":"+fin.desc+" in "+realOwner);
 							
 							fin.name = m.getField(realOwner, fin.name);
 							fin.desc = m.mapTypeDescriptor(fin.desc);
 							fin.owner = m.getClass(realOwner);
 							
-							if(DEBUG_FIELD_RESOLUTION)
+							if(debugThis)
 								System.out.println(", remapped to "+fin.owner+"/"+fin.name+":"+fin.desc);
 							
 						} else if(ain instanceof FrameNode) {
@@ -218,9 +235,19 @@ public class Remapper {
 							TypeInsnNode tin = (TypeInsnNode)ain;
 							
 							tin.desc = m.getClass(tin.desc);
+						
+						} else if(ain instanceof MultiANewArrayInsnNode) {
+							MultiANewArrayInsnNode min = (MultiANewArrayInsnNode)ain;
+							
+							min.desc = m.getClass(min.desc);
 						}
 					}
 				}
+				
+				processAnnotationList(m, mn.visibleAnnotations);
+				processAnnotationList(m, mn.visibleParameterAnnotations);
+				processAnnotationList(m, mn.invisibleAnnotations);
+				processAnnotationList(m, mn.invisibleParameterAnnotations);
 				
 				for(TryCatchBlockNode tcb : mn.tryCatchBlocks) {
 					if(tcb.type != null)
@@ -239,7 +266,6 @@ public class Remapper {
 					for(LocalVariableNode lvn : mn.localVariables)
 						lvn.desc = m.mapTypeDescriptor(lvn.desc);
 				
-				// TODO: support annotations (even though Minecraft doesn't use them)
 				// TODO: support signatures (for generics, even though Minecraft doesn't use them after obfuscation)
 			}
 			
@@ -247,7 +273,9 @@ public class Remapper {
 				fn.name = m.getField(cn.name, fn.name);
 				fn.desc = m.mapTypeDescriptor(fn.desc);
 				
-				// TODO: support annotations (even though Minecraft doesn't use them)
+				processAnnotationList(m, fn.invisibleAnnotations);
+				processAnnotationList(m, fn.visibleAnnotations);
+				
 				// TODO: support signatures (for generics, even though Minecraft doesn't use them after obfuscation)
 			}
 			
@@ -257,7 +285,9 @@ public class Remapper {
 			for(int k = 0; k < cn.interfaces.size(); k++)
 				cn.interfaces.set(k, m.getClass(cn.interfaces.get(k)));
 			
-			// TODO: support annotations (even though Minecraft doesn't use them)
+			processAnnotationList(m, cn.invisibleAnnotations);
+			processAnnotationList(m, cn.visibleAnnotations);
+			
 			// TODO: support signatures (for generics, even though Minecraft doesn't use them after obfuscation)
 			
 			for(InnerClassNode icn : cn.innerClasses) {
@@ -283,9 +313,57 @@ public class Remapper {
 		return cc;
 		
 	}
-
-	public static ClassCollection remap(ClassCollection classes, NameSet toNS, Collection<ClassCollection> refs, IProgressListener progress) throws MappingUnavailableException, IOException {
-		return remap(classes, MappingFactory.getMapping(classes.getNameSet(), toNS, null), refs, progress);
+	
+	private static void processAnnotationList(Mapping m, List<AnnotationNode>[] array) {
+		if(array != null)
+			for(List<AnnotationNode> list : array)
+				processAnnotationList(m, list);
 	}
+
+	private static void processAnnotationList(Mapping m, List<AnnotationNode> list) {
+		if(list != null)
+			for(AnnotationNode an : list)
+				processAnnotation(m, an);
+	}
+	
+	private static void processAnnotation(Mapping m, AnnotationNode an) {
+		an.desc = m.getClass(an.desc);
+		if(an.values != null)
+			for(int k = 1; k < an.values.size(); k += 2)
+				an.values.set(k, processAnnotationValue(m, an.values.get(k)));
+	}
+
+	private static Object processAnnotationValue(Mapping m, Object value) {
+		if(value instanceof Type)
+			return Type.getType(m.getClass(((Type)value).getDescriptor()));
+		
+		if(value instanceof String[]) {
+			// enum value; need to remap both the enum, and the value
+			String[] array = (String[])value;
+			String desc = array[0], enumvalue = array[1];
+			if(!desc.startsWith("L") || !desc.endsWith(";"))
+				throw new AssertionError("Not a class type descriptor: "+desc);
+			return new String[] {m.getClass(desc), m.getField(desc.substring(1, desc.length() - 1), enumvalue)};
+		}
+		
+		if(value instanceof List) {
+			@SuppressWarnings("unchecked")
+			List<Object> list = (List<Object>)value;
+			for(int k = 0; k < list.size(); k++)
+				list.set(k, processAnnotationValue(m, list.get(k)));
+			return value;
+		}
+		
+		if(value instanceof AnnotationNode) {
+			processAnnotation(m, (AnnotationNode)value);
+			return value;
+		}
+		
+		return value;
+	}
+
+	/*public static ClassCollection remap(ClassCollection classes, NameSet toNS, Collection<ClassCollection> refs, IProgressListener progress) throws MappingUnavailableException, IOException {
+		return remap(classes, MappingFactory.getMapping(classes.getNameSet(), toNS, null), refs, progress);
+	}*/
 
 }
