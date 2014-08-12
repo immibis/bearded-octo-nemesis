@@ -1,7 +1,15 @@
 package immibis.bon.mcp;
 
-import java.io.*;
-import java.util.*;
+import immibis.bon.Mapping;
+import immibis.bon.NameSet;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
 public class SrgFile {
 	
@@ -51,5 +59,28 @@ public class SrgFile {
 		} finally {
 			in.close();
 		}
+	}
+	
+	public Mapping toMapping(NameSet fromNS, NameSet toNS) {
+		Mapping m = new Mapping(fromNS, toNS);
+		
+		for(Map.Entry<String, String> entry : classes.entrySet()) {
+			m.setClass(entry.getKey(), entry.getValue());
+		}
+		
+		for(Map.Entry<String, String> entry : fields.entrySet()) {
+			int i = entry.getKey().lastIndexOf('/');
+			m.setField(entry.getKey().substring(0, i), entry.getKey().substring(i+1), entry.getValue());
+		}
+		
+		for(Map.Entry<String, String> entry : methods.entrySet()) {
+			int i = entry.getKey().lastIndexOf('(');
+			String desc = entry.getKey().substring(i);
+			String classandname = entry.getKey().substring(0,i);
+			i = classandname.lastIndexOf('/');
+			m.setMethod(classandname.substring(0,i), classandname.substring(i+1), desc, entry.getValue());
+		}
+		
+		return m;
 	}
 }
