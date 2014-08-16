@@ -1,5 +1,8 @@
 package immibis.bon;
 
+import immibis.bon.ClassReferenceData.FieldData;
+import immibis.bon.ClassReferenceData.MethodData;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,16 +33,16 @@ public class Remapper {
 	
 	// returns actual owner of field
 	// or null if the field could not be resolved
-	private static String resolveField(Map<String, ClassNode> refClasses, String owner, String name, String desc, Mapping m) {
+	private static String resolveField(Map<String, ClassReferenceData> refClasses, String owner, String name, String desc, Mapping m) {
 		
-		ClassNode cn = refClasses.get(owner);
+		ClassReferenceData cn = refClasses.get(owner);
 		if(cn == null) {
 			return null;
 		}
 		
 		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-5.html#jvms-5.4.3.2
 		
-		for(FieldNode fn : cn.fields)
+		for(FieldData fn : cn.fields)
 			if(fn.name.equals(name) && fn.desc.equals(desc)) {
 				return owner;
 			}
@@ -57,9 +60,9 @@ public class Remapper {
 	
 	// returns [realOwner, realDesc]
 	// or null if the method could not be resolved
-	private static String[] resolveMethod(Map<String, ClassNode> refClasses, String owner, String name, String desc, Mapping m) {
+	private static String[] resolveMethod(Map<String, ClassReferenceData> refClasses, String owner, String name, String desc, Mapping m) {
 		
-		ClassNode cn = refClasses.get(owner);
+		ClassReferenceData cn = refClasses.get(owner);
 		if(cn == null)
 			return null;
 		
@@ -67,7 +70,7 @@ public class Remapper {
 			
 			// interface method resolution; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-5.html#jvms-5.4.3.4
 			
-			for(MethodNode mn : cn.methods) {
+			for(MethodData mn : cn.methods) {
 				if(mn.name.equals(name) && mn.desc.equals(desc) && !m.getMethod(owner, name, desc).equals(name))
 					return new String[] {owner, desc};
 			}
@@ -92,7 +95,7 @@ public class Remapper {
 				if(cn == null)
 					break;
 				
-				for(MethodNode mn : cn.methods) {
+				for(MethodData mn : cn.methods) {
 					if(mn.name.equals(name) && mn.desc.equals(desc) && !m.getMethod(owner, name, desc).equals(name))
 						return new String[] {owner, desc};
 				}
@@ -120,22 +123,22 @@ public class Remapper {
 		}
 	}
 
-	public static ClassCollection remap(ClassCollection cc, Mapping m, Collection<ClassCollection> refs, IProgressListener progress) {
+	public static ClassCollection remap(ClassCollection cc, Mapping m, Collection<ReferenceDataCollection> refs, IProgressListener progress) {
 		
 		if(!cc.getNameSet().equals(m.fromNS))
 			throw new IllegalArgumentException("Input classes use nameset "+cc.getNameSet()+", but mapping is from "+m.fromNS+"; cannot apply mapping");
 		
-		for(ClassCollection ref : refs)
+		for(ReferenceDataCollection ref : refs)
 			if(!ref.getNameSet().equals(m.fromNS))
 				throw new IllegalArgumentException("Reference ClassCollection uses nameset "+ref.getNameSet()+" but input uses "+m.fromNS);
 		
-		HashMap<String, ClassNode> refClasses = new HashMap<>();
+		HashMap<String, ClassReferenceData> refClasses = new HashMap<>();
 		
-		for(ClassCollection refcc : refs)
-			for(ClassNode cn : refcc.getAllClasses())
+		for(ReferenceDataCollection refcc : refs)
+			for(ClassReferenceData cn : refcc.getAllClasses())
 				refClasses.put(cn.name, cn);
 		for(ClassNode cn : cc.getAllClasses())
-			refClasses.put(cn.name, cn);
+			refClasses.put(cn.name, ClassReferenceData.fromClassNode(cn));
 		
 		cc = cc.cloneWithNameSet(m.toNS);
 		

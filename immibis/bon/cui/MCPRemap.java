@@ -1,6 +1,7 @@
 package immibis.bon.cui;
 
 import immibis.bon.ClassCollection;
+import immibis.bon.ReferenceDataCollection;
 import immibis.bon.Remapper;
 import immibis.bon.io.ClassCollectionFactory;
 import immibis.bon.io.JarWriter;
@@ -40,7 +41,7 @@ public class MCPRemap extends CUIBase {
 		MinecraftNameSet inputNS = new MinecraftNameSet(fromType, side, mcVer);
 		MinecraftNameSet outputNS = new MinecraftNameSet(toType, side, mcVer);
 		
-		List<ClassCollection> refs = new ArrayList<>();
+		List<ReferenceDataCollection> refs = new ArrayList<>();
 		for(RefOption ro : refOptsParsed) {
 			MinecraftNameSet refNS = new MinecraftNameSet(ro.type, side, mcVer);
 		
@@ -50,11 +51,11 @@ public class MCPRemap extends CUIBase {
 			
 			if(!refNS.equals(inputNS)) {
 				System.out.println("Remapping "+ro.file+" ("+refNS+" -> "+inputNS+")");
-				refCC = Remapper.remap(refCC, MappingFactory.getMapping((MinecraftNameSet)refCC.getNameSet(), inputNS, null), Collections.<ClassCollection>emptyList(), null);
+				refCC = Remapper.remap(refCC, MappingFactory.getMapping((MinecraftNameSet)refCC.getNameSet(), inputNS, null), Collections.<ReferenceDataCollection>emptyList(), null);
 				remapTime += timer.flip();
 			}
 			
-			refs.add(refCC);
+			refs.add(ReferenceDataCollection.fromClassCollection(refCC));
 		}
 		
 		System.out.println("Loading "+inFile);

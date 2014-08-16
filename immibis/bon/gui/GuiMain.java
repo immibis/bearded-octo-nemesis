@@ -3,6 +3,7 @@ package immibis.bon.gui;
 import immibis.bon.ClassCollection;
 import immibis.bon.IProgressListener;
 import immibis.bon.NameSet;
+import immibis.bon.ReferenceDataCollection;
 import immibis.bon.Remapper;
 import immibis.bon.io.ClassCollectionFactory;
 import immibis.bon.io.JarWriter;
@@ -10,7 +11,11 @@ import immibis.bon.mcp.MappingFactory;
 import immibis.bon.mcp.MappingLoader_MCP;
 import immibis.bon.mcp.MinecraftNameSet;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,7 +32,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 public class GuiMain extends JFrame {
 	private static final long serialVersionUID = 1;
@@ -95,6 +109,7 @@ public class GuiMain extends JFrame {
 		final File outputFile = new File(outputField.getText());
 		
 		curTask = new Thread() {
+			@Override
 			public void run() {
 				boolean crashed = false;
 				
@@ -107,6 +122,7 @@ public class GuiMain extends JFrame {
 						public void start(final int max, final String text) {
 							currentText = text.equals("") ? " " : text;
 							SwingUtilities.invokeLater(new Runnable() {
+								@Override
 								public void run() {
 									progressLabel.setText(currentText);
 									if(max >= 0)
@@ -119,6 +135,7 @@ public class GuiMain extends JFrame {
 						@Override
 						public void set(final int value) {
 							SwingUtilities.invokeLater(new Runnable() {
+								@Override
 								public void run() {
 									progressBar.setValue(value);
 								}
@@ -128,6 +145,7 @@ public class GuiMain extends JFrame {
 						@Override
 						public void setMax(final int max) {
 							SwingUtilities.invokeLater(new Runnable() {
+								@Override
 								public void run() {
 									progressBar.setMaximum(max);
 								}
@@ -211,16 +229,16 @@ public class GuiMain extends JFrame {
 					for(MinecraftNameSet.Type outputType : remapTo) {
 						MinecraftNameSet outputNS = new MinecraftNameSet(outputType, side.nsside, mcVer);
 						
-						List<ClassCollection> remappedRefs = new ArrayList<>();
+						List<ReferenceDataCollection> remappedRefs = new ArrayList<>();
 						for(Map.Entry<String, ClassCollection> e : refCCList.entrySet()) {
 							
 							if(inputCC.getNameSet().equals(e.getValue().getNameSet())) {
 								// no need to remap this
-								remappedRefs.add(e.getValue());
+								remappedRefs.add(ReferenceDataCollection.fromClassCollection(e.getValue()));
 								
 							} else {
 								progress.start(0, "Remapping "+e.getKey()+" to "+outputType+" names");
-								remappedRefs.add(Remapper.remap(e.getValue(), MappingFactory.getMapping((MinecraftNameSet)e.getValue().getNameSet(), (MinecraftNameSet)inputCC.getNameSet(), null), Collections.<ClassCollection>emptyList(), progress));
+								remappedRefs.add(ReferenceDataCollection.fromClassCollection(Remapper.remap(e.getValue(), MappingFactory.getMapping((MinecraftNameSet)e.getValue().getNameSet(), (MinecraftNameSet)inputCC.getNameSet(), null), Collections.<ReferenceDataCollection>emptyList(), progress)));
 							}
 						}
 						
@@ -431,6 +449,7 @@ public class GuiMain extends JFrame {
 	
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				new GuiMain().setVisible(true);
 			}
