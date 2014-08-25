@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -21,43 +22,55 @@ public class SrgFile {
 		String[] parts = s.split("/");
 		return parts[parts.length - 1];
 	}
-
-	public SrgFile(File f, boolean reverse) throws IOException {
-		Scanner in = new Scanner(new BufferedReader(new FileReader(f)));
-		try {
-			while(in.hasNextLine()) {
-				if(in.hasNext("CL:")) {
-					in.next();
-					String obf = in.next();
-					String deobf = in.next();
-					if(reverse)
-						classes.put(deobf, obf);
-					else
-						classes.put(obf, deobf);
-				} else if(in.hasNext("FD:")) {
-					in.next();
-					String obf = in.next();
-					String deobf = in.next();
-					if(reverse)
-						fields.put(deobf, getLastComponent(obf));
-					else
-						fields.put(obf, getLastComponent(deobf));
-				} else if(in.hasNext("MD:")) {
-					in.next();
-					String obf = in.next();
-					String obfdesc = in.next();
-					String deobf = in.next();
-					String deobfdesc = in.next();
-					if(reverse)
-						methods.put(deobf + deobfdesc, getLastComponent(obf));
-					else
-						methods.put(obf + obfdesc, getLastComponent(deobf));
-				} else {
-					in.nextLine();
-				}
+	
+	private SrgFile() {}
+	
+	/** Does not close <var>r</var>. */
+	public static SrgFile read(Reader r, boolean reverse) throws IOException {
+		@SuppressWarnings("resource")
+		Scanner in = new Scanner(r);
+		SrgFile rv = new SrgFile();
+		while(in.hasNextLine()) {
+			if(in.hasNext("CL:")) {
+				in.next();
+				String obf = in.next();
+				String deobf = in.next();
+				if(reverse)
+					rv.classes.put(deobf, obf);
+				else
+					rv.classes.put(obf, deobf);
+			} else if(in.hasNext("FD:")) {
+				in.next();
+				String obf = in.next();
+				String deobf = in.next();
+				if(reverse)
+					rv.fields.put(deobf, getLastComponent(obf));
+				else
+					rv.fields.put(obf, getLastComponent(deobf));
+			} else if(in.hasNext("MD:")) {
+				in.next();
+				String obf = in.next();
+				String obfdesc = in.next();
+				String deobf = in.next();
+				String deobfdesc = in.next();
+				if(reverse)
+					rv.methods.put(deobf + deobfdesc, getLastComponent(obf));
+				else
+					rv.methods.put(obf + obfdesc, getLastComponent(deobf));
+			} else {
+				in.nextLine();
 			}
-		} finally {
-			in.close();
+		}
+		return rv;
+	}
+
+	@Deprecated
+	public SrgFile(File f, boolean reverse) throws IOException {
+		try (FileReader fr = new FileReader(f)) {
+			SrgFile sf = read(new BufferedReader(fr), reverse);
+			classes = sf.classes;
+			fields = sf.fields;
+			methods = sf.methods;
 		}
 	}
 	

@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+/** TODO remove this - unused? */
 public class RecursiveDirectoryIterator implements Iterable<File> {
 	
 	private final File root;

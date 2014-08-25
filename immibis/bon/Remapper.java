@@ -29,8 +29,6 @@ import org.objectweb.asm.tree.TypeInsnNode;
 
 public class Remapper {
 	
-	public static final String DEBUG_FIELD_RESOLUTION = "field_78090_t";
-	
 	// returns actual owner of field
 	// or null if the field could not be resolved
 	private static String resolveField(Map<String, ClassReferenceData> refClasses, String owner, String name, String desc, Mapping m) {

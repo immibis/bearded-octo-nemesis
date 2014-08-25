@@ -27,29 +27,22 @@ public class MappingLoader_MCP {
 	
 	
 	
-	@SuppressWarnings("unused")
-	private final Side side;
-	@SuppressWarnings("unused")
-	private final String mcVer;
-	private final File mcpDir;
-	private final int[] sideNumbers;
-	private final File srgFile, excFile;
-	
 	// forward: obf -> searge -> mcp
 	// reverse: mcp -> searge -> obf
 	private Mapping forwardSRG, reverseSRG, forwardCSV, reverseCSV;
 	
 	
-	private Map<String, String> srgMethodDescriptors = new HashMap<>(); // SRG name -> SRG descriptor
-	private Map<String, Set<String>> srgMethodOwners = new HashMap<>(); // SRG name -> SRG owners
+	private Map<String, Set<String>> srgMethodOwnersAndDescs = new HashMap<>(); // SRG name -> SRG owners
 	private Map<String, Set<String>> srgFieldOwners = new HashMap<>(); // SRG name -> SRG owners
 	
 	private ExcFile excFileData;
 	
+	public MappingLoader_MCP() {}
+	
+	@Deprecated
 	public MappingLoader_MCP(String mcVer, Side side, File mcpDir, IProgressListener progress) throws IOException, CantLoadMCPMappingException {
-		this.mcVer = mcVer;
-		this.mcpDir = mcpDir;
-		this.side = side;
+		File srgFile, excFile;
+		int[] sideNumbers;
 		
 		switch(side) {
 		case UNIVERSAL:
@@ -88,6 +81,11 @@ public class MappingLoader_MCP {
 		default: throw new AssertionError("side is "+side);
 		}
 		
+		load(side, mcVer, new ExcFile(excFile), new SrgFile(srgFile, false), CsvFile.read(new File(mcpDir, "conf/fields.csv"), sideNumbers), CsvFile.read(new File(mcpDir, "conf/methods.csv"), sideNumbers), progress);
+	}
+	
+	public void load(Side side, String mcVer, ExcFile excFile, SrgFile srgFile, Map<String, String> fieldNames, Map<String, String> methodNames, IProgressListener progress) throws CantLoadMCPMappingException {
+		
 		NameSet obfNS = new MinecraftNameSet(MinecraftNameSet.Type.OBF, side, mcVer);
 		NameSet srgNS = new MinecraftNameSet(MinecraftNameSet.Type.SRG, side, mcVer);
 		NameSet mcpNS = new MinecraftNameSet(MinecraftNameSet.Type.MCP, side, mcVer);
@@ -100,22 +98,16 @@ public class MappingLoader_MCP {
 		
 		if(progress != null) progress.setMax(3);
 		if(progress != null) progress.set(0);
-		loadEXCFile();
+		excFileData = excFile;
 		if(progress != null) progress.set(1);
-		loadSRGMapping();
+		loadSRGMapping(srgFile);
 		if(progress != null) progress.set(2);
-		loadCSVMapping();
-	}
-	
-	private void loadEXCFile() throws IOException {
-		excFileData = new ExcFile(excFile);
+		loadCSVMapping(fieldNames, methodNames);
 	}
 	
 	
 
-	private void loadSRGMapping() throws IOException, CantLoadMCPMappingException {
-		SrgFile srg = new SrgFile(srgFile, false);
-		
+	private void loadSRGMapping(SrgFile srg) throws CantLoadMCPMappingException {
 		forwardSRG.setDefaultPackage("net/minecraft/src/");
 		reverseSRG.addPrefix("net/minecraft/src/", "");
 		
@@ -163,12 +155,10 @@ public class MappingLoader_MCP {
 			String srgDesc = forwardSRG.mapMethodDescriptor(obfDesc);
 			String srgOwner = srg.classes.get(obfOwner);
 			
-			srgMethodDescriptors.put(srgName, srgDesc);
-			
-			Set<String> srgMethodOwnersThis = srgMethodOwners.get(srgName);
+			Set<String> srgMethodOwnersThis = srgMethodOwnersAndDescs.get(srgName);
 			if(srgMethodOwnersThis == null)
-				srgMethodOwners.put(srgName, srgMethodOwnersThis = new HashSet<>());
-			srgMethodOwnersThis.add(srgOwner);
+				srgMethodOwnersAndDescs.put(srgName, srgMethodOwnersThis = new HashSet<>());
+			srgMethodOwnersThis.add(srgOwner+srgDesc);
 			
 			forwardSRG.setMethod(obfOwner, obfName, obfDesc, srgName);
 			reverseSRG.setMethod(srgOwner, srgName, srgDesc, obfName);
@@ -184,10 +174,7 @@ public class MappingLoader_MCP {
 		}
 	}
 	
-	private void loadCSVMapping() throws IOException, CantLoadMCPMappingException  {
-		Map<String, String> fieldNames = CsvFile.read(new File(mcpDir, "conf/fields.csv"), sideNumbers);
-		Map<String, String> methodNames = CsvFile.read(new File(mcpDir, "conf/methods.csv"), sideNumbers);
-		
+	private void loadCSVMapping(Map<String, String> fieldNames, Map<String, String> methodNames) throws CantLoadMCPMappingException  {
 		for(Map.Entry<String, String> entry : fieldNames.entrySet()) {
 			String srgName = entry.getKey();
 			String mcpName = entry.getValue();
@@ -208,11 +195,12 @@ public class MappingLoader_MCP {
 			String srgName = entry.getKey();
 			String mcpName = entry.getValue();
 			
-			if(srgMethodOwners.get(srgName) == null) {
+			if(srgMethodOwnersAndDescs.get(srgName) == null) {
 				System.out.println("Method exists in CSV but not in SRG: "+srgName+" (CSV name: "+mcpName+")");
 			} else {
-				for(String srgOwner : srgMethodOwners.get(srgName)) {
-					String srgDesc = srgMethodDescriptors.get(srgName);
+				for(String srgOwnerAndDesc : srgMethodOwnersAndDescs.get(srgName)) {
+					String srgDesc = srgOwnerAndDesc.substring(srgOwnerAndDesc.indexOf('('));
+					String srgOwner = srgOwnerAndDesc.substring(0, srgOwnerAndDesc.indexOf('('));
 					String mcpOwner = srgOwner;
 					String mcpDesc = srgDesc;
 					

@@ -1,6 +1,7 @@
 package immibis.bon.mcp;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ExcFile {
@@ -17,30 +18,63 @@ public class ExcFile {
 		return r;
 	}
 	
-	public ExcFile(File f) throws IOException {
+	private ExcFile() {}
+	
+	public static ExcFile read(InputStream in) throws IOException {
+		return read(new InputStreamReader(in, StandardCharsets.UTF_8));
+	}
+	
+	/** Does not close <var>r</var>. */
+	public static ExcFile read(Reader r) throws IOException {
 		//example line:
 		//net/minecraft/src/NetClientHandler.<init>(Lnet/minecraft/client/Minecraft;Ljava/lang/String;I)V=java/net/UnknownHostException,java/io/IOException|p_i42_1_,p_i42_2_,p_i42_3_
 		
-		Scanner in = new Scanner(new FileReader(f));
-		try {
-			while(in.hasNextLine()) {
-				if(in.hasNext("#")) {
-					in.nextLine();
-					continue;
-				}
-				in.useDelimiter("\\.");
-				String clazz = in.next();
-				in.useDelimiter("\\(");
-				String func = in.next().substring(1);
-				in.useDelimiter("=");
-				String desc = in.next();
-				in.useDelimiter("\\|");
-				String excs = in.next().substring(1);
-				in.nextLine(); // skip rest of line
-				exceptions.put(clazz + "/" + func + desc, excs.split(","));
-			}
-		} finally {
-			in.close();
+		ExcFile rv = new ExcFile();
+		
+		@SuppressWarnings("resource")
+		Scanner in = new Scanner(r);
+		while(in.hasNextLine()) {
+			String line = in.nextLine();
+			
+			if(line.startsWith("#"))
+				continue;
+			
+			if(line.contains("-Access="))
+				continue;
+			
+			if(line.contains("=CL_"))
+				continue;
+			
+			int i = line.indexOf('.');
+			if(i < 0)
+				continue;
+			String clazz = line.substring(0, i);
+			line = line.substring(i+1);
+			
+			i = line.indexOf('(');
+			String func = line.substring(0, i);
+			line = line.substring(i+1);
+			
+			i = line.indexOf('=');
+			String desc = line.substring(0, i);
+			line = line.substring(i+1);
+			
+			i = line.indexOf('|');
+			String excs = line.substring(0, i);
+			line = line.substring(i+1);
+			
+			if(excs.contains("CL_"))
+				throw new RuntimeException(excs);
+			
+			rv.exceptions.put(clazz + "/" + func + desc, excs.split(","));
+		}
+		return rv;
+	}
+	
+	@Deprecated
+	public ExcFile(File f) throws IOException {
+		try (FileReader fr = new FileReader(f)) {
+			exceptions = read(fr).exceptions;
 		}
 	}
 }

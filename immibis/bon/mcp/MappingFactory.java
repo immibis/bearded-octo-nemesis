@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+
+@Deprecated
 public class MappingFactory {
 	
 	public static class MappingUnavailableException extends Exception {
@@ -29,6 +31,10 @@ public class MappingFactory {
 	
 	public static void registerMCPInstance(String mcVersion, MinecraftNameSet.Side side, File mcpPath, IProgressListener progress) throws IOException, CantLoadMCPMappingException {
 		mcpInstances.put(mcVersion+" "+side, new MappingLoader_MCP(mcVersion, side, mcpPath, progress));
+	}
+	
+	public static void registerMCPInstance(String mcVersion, MinecraftNameSet.Side side, MappingLoader_MCP loader) {
+		mcpInstances.put(mcVersion+" "+side, loader);
 	}
 
 	@SuppressWarnings("incomplete-switch")

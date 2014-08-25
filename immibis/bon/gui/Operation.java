@@ -2,9 +2,9 @@ package immibis.bon.gui;
 
 public enum Operation {
 	DeobfuscateMod("Deobfuscate mod", ".deobf"),
-	ReobfuscateMod("Reobfuscate mod", ".reobf"),
-	ReobfuscateModSRG("Reobfuscate mod to SRG", ".srg"),
-	SRGifyMod("Deobfuscate mod to SRG", ".srg");
+	ReobfuscateModSRG("Reobfuscate mod", ".deobf"),
+	ReobfuscateMod("Reobfuscate mod to Notch names", ".reobf.notch"),
+	SRGifyMod("SRGify obfuscated mod", ".srg");
 	
 	private Operation(String str, String suffix) {
 		this.str = str;
