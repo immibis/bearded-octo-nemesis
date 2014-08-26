@@ -16,12 +16,15 @@ import org.objectweb.asm.tree.ClassNode;
 
 public class JarWriter {
 	
-	private static void addDirectories(String filePath, Set<String> dirs) {
+	private static void addDirectories(JarOutputStream j_out, String filePath, Set<String> dirs) throws IOException {
 		int i = filePath.lastIndexOf('/');
 		if(i >= 0) {
 			String dirPath = filePath.substring(0, i);
-			if(dirs.add(dirPath))
-				addDirectories(dirPath, dirs); // ensure all parent directories are added
+			if(dirs.add(dirPath)) {
+				addDirectories(j_out, dirPath, dirs); // ensure all parent directories are added
+				j_out.putNextEntry(new JarEntry(dirPath+"/"));
+				j_out.closeEntry();
+			}
 		}
 	}
 
@@ -38,7 +41,7 @@ public class JarWriter {
 				if(progress != null) 
 					progress.set(files++);
 				
-				addDirectories(cn.name, dirs);
+				addDirectories(j_out, cn.name, dirs);
 				
 				j_out.putNextEntry(new JarEntry(cn.name + ".class"));
 				j_out.write(IOUtils.writeClass(cn));
@@ -49,15 +52,10 @@ public class JarWriter {
 				if(progress != null) 
 					progress.set(files++);
 				
-				addDirectories(e.getKey(), dirs);
+				addDirectories(j_out, e.getKey(), dirs);
 				
 				j_out.putNextEntry(new JarEntry(e.getKey()));
 				j_out.write(e.getValue());
-				j_out.closeEntry();
-			}
-			
-			for(String dirPath : dirs) {
-				j_out.putNextEntry(new JarEntry(dirPath + "/"));
 				j_out.closeEntry();
 			}
 		}
