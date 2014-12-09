@@ -69,6 +69,8 @@ public class DownloadDialog extends JDialog {
 			gbc_progressBar.gridy = 1;
 			contentPanel.add(progressBar, gbc_progressBar);
 		}
+		
+		setLocationRelativeTo(owner);
 	}
 	
 	public static void download(final JFrame parent, final URL url, final OutputStream out) throws IOException {
