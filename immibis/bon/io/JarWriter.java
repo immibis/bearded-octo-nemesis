@@ -2,6 +2,7 @@ package immibis.bon.io;
 
 import immibis.bon.ClassCollection;
 import immibis.bon.IProgressListener;
+import immibis.bon.org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-
-import org.objectweb.asm.tree.ClassNode;
 
 public class JarWriter {
 	

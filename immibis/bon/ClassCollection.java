@@ -1,11 +1,11 @@
 package immibis.bon;
 
+import immibis.bon.org.objectweb.asm.tree.ClassNode;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.objectweb.asm.tree.ClassNode;
 
 public class ClassCollection implements Cloneable {
 	public ClassCollection(NameSet nameSet, Collection<ClassNode> classes) {

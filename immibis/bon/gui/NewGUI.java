@@ -5,6 +5,7 @@ import immibis.bon.IProgressListener;
 import immibis.bon.NameSet;
 import immibis.bon.ReferenceDataCollection;
 import immibis.bon.Remapper;
+import immibis.bon.com.immibis.json.JsonReader;
 import immibis.bon.io.ClassCollectionFactory;
 import immibis.bon.io.JarWriter;
 import immibis.bon.mcp.CsvFile;
@@ -71,8 +72,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.swing.JCheckBox;
-
-import com.immibis.json.JsonReader;
 
 public class NewGUI {
 	

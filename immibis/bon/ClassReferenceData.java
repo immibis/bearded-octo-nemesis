@@ -1,6 +1,6 @@
 package immibis.bon;
 
-import org.objectweb.asm.tree.ClassNode;
+import immibis.bon.org.objectweb.asm.tree.ClassNode;
 
 public class ClassReferenceData {
 	

@@ -6,6 +6,7 @@ import immibis.bon.ClassReferenceData;
 import immibis.bon.IProgressListener;
 import immibis.bon.NameSet;
 import immibis.bon.ReferenceDataCollection;
+import immibis.bon.org.objectweb.asm.tree.ClassNode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -15,8 +16,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.objectweb.asm.tree.ClassNode;
 
 public class DirLoader {
 	

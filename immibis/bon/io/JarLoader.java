@@ -6,6 +6,7 @@ import immibis.bon.ClassReferenceData;
 import immibis.bon.IProgressListener;
 import immibis.bon.NameSet;
 import immibis.bon.ReferenceDataCollection;
+import immibis.bon.org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,8 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-
-import org.objectweb.asm.tree.ClassNode;
 
 public class JarLoader {
 	

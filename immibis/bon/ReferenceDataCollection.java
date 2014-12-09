@@ -1,9 +1,9 @@
 package immibis.bon;
 
+import immibis.bon.org.objectweb.asm.tree.ClassNode;
+
 import java.util.ArrayList;
 import java.util.Collection;
-
-import org.objectweb.asm.tree.ClassNode;
 
 /**
  * Similar to ClassCollection, but contains less information.
