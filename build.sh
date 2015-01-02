@@ -8,7 +8,7 @@ fi
 mkdir bin
 
 echo "*** Compiling BON class files..."
-javac -d bin -sourcepath . immibis/bon/gui/GuiMain.java
+javac -d bin -sourcepath . immibis/bon/gui/NewGUI.java
 javac -d bin -sourcepath . immibis/bon/cui/MCPRemap.java
 
 
