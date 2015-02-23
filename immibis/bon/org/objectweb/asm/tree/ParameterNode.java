@@ -31,58 +31,46 @@ package immibis.bon.org.objectweb.asm.tree;
 
 import immibis.bon.org.objectweb.asm.MethodVisitor;
 
-import java.util.Map;
-
 /**
- * A node that represents a zero operand instruction.
+ * A node that represents a parameter access and name.
  * 
- * @author Eric Bruneton
+ * @author Remi Forax
  */
-public class InsnNode extends AbstractInsnNode {
-
+public class ParameterNode {
     /**
-     * Constructs a new {@link InsnNode}.
-     * 
-     * @param opcode
-     *            the opcode of the instruction to be constructed. This opcode
-     *            must be NOP, ACONST_NULL, ICONST_M1, ICONST_0, ICONST_1,
-     *            ICONST_2, ICONST_3, ICONST_4, ICONST_5, LCONST_0, LCONST_1,
-     *            FCONST_0, FCONST_1, FCONST_2, DCONST_0, DCONST_1, IALOAD,
-     *            LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD, SALOAD,
-     *            IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE,
-     *            SASTORE, POP, POP2, DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1,
-     *            DUP2_X2, SWAP, IADD, LADD, FADD, DADD, ISUB, LSUB, FSUB, DSUB,
-     *            IMUL, LMUL, FMUL, DMUL, IDIV, LDIV, FDIV, DDIV, IREM, LREM,
-     *            FREM, DREM, INEG, LNEG, FNEG, DNEG, ISHL, LSHL, ISHR, LSHR,
-     *            IUSHR, LUSHR, IAND, LAND, IOR, LOR, IXOR, LXOR, I2L, I2F, I2D,
-     *            L2I, L2F, L2D, F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S,
-     *            LCMP, FCMPL, FCMPG, DCMPL, DCMPG, IRETURN, LRETURN, FRETURN,
-     *            DRETURN, ARETURN, RETURN, ARRAYLENGTH, ATHROW, MONITORENTER,
-     *            or MONITOREXIT.
+     * The parameter's name.
      */
-    public InsnNode(final int opcode) {
-        super(opcode);
-    }
+    public String name;
 
-    @Override
-    public int getType() {
-        return INSN;
+    /**
+     * The parameter's access flags (see {@link immibis.bon.org.objectweb.asm.Opcodes}).
+     * Valid values are <tt>ACC_FINAL</tt>, <tt>ACC_SYNTHETIC</tt> and
+     * <tt>ACC_MANDATED</tt>.
+     */
+    public int access;
+
+    /**
+     * Constructs a new {@link ParameterNode}.
+     * 
+     * @param access
+     *            The parameter's access flags. Valid values are
+     *            <tt>ACC_FINAL</tt>, <tt>ACC_SYNTHETIC</tt> or/and
+     *            <tt>ACC_MANDATED</tt> (see {@link immibis.bon.org.objectweb.asm.Opcodes}).
+     * @param name
+     *            the parameter's name.
+     */
+    public ParameterNode(final String name, final int access) {
+        this.name = name;
+        this.access = access;
     }
 
     /**
-     * Makes the given visitor visit this instruction.
+     * Makes the given visitor visit this parameter declaration.
      * 
      * @param mv
      *            a method visitor.
      */
-    @Override
     public void accept(final MethodVisitor mv) {
-        mv.visitInsn(opcode);
-        acceptAnnotations(mv);
-    }
-
-    @Override
-    public AbstractInsnNode clone(final Map<LabelNode, LabelNode> labels) {
-        return new InsnNode(opcode).cloneAnnotations(this);
+        mv.visitParameter(name, access);
     }
 }
