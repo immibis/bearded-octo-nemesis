@@ -243,8 +243,7 @@ public class Remapper {
 				if(mn.localVariables != null)
 					for(LocalVariableNode lvn : mn.localVariables)
 						lvn.desc = m.mapTypeDescriptor(lvn.desc);
-				
-				// TODO: support signatures (for generics, even though Minecraft doesn't use them after obfuscation)
+						lvn.signature = m.mapTypeSignature(lvn.signature);
 			}
 			
 			for(FieldNode fn : cn.fields) {
