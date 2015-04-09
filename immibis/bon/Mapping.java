@@ -118,4 +118,9 @@ public class Mapping {
 			return "L" + getClass(in.substring(1, in.length() - 1)) + ";";
 		return in;
 	}
+	
+	public String mapTypeSignature(String in) {
+		//TODO
+		return in;
+	}
 }
