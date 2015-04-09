@@ -120,7 +120,17 @@ public class Mapping {
 	}
 	
 	public String mapTypeSignature(String in) {
-		String internalName = in.substring(in.firstIndexOf("<") + 1, in.lastIndexOf(">"));
-		return in.replace(internalName, getClass(internalName));
+		if (!in.contains("<") || !in.contains(">")) {
+			return in;
+		}
+		String internalName = in.substring(in.indexOf("<") + 1, in.lastIndexOf(">"));
+		if (internalName.startsWith("L") && internalName.endsWith(";")) {
+			internalName = internalName.substring(1, internalName.indexOf(";"));
+		}
+		internalName = in.replace(internalName, getClass(internalName));
+		if (!internalName.equals(in)) {
+			return internalName;
+		}
+		return in;
 	}
 }
