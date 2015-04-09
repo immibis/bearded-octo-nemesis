@@ -118,4 +118,31 @@ public class Mapping {
 			return "L" + getClass(in.substring(1, in.length() - 1)) + ";";
 		return in;
 	}
+	
+	public String mapTypeSignature(final String in) {
+		if (!in.contains("<") || !in.contains(">")) {
+			return in;
+		}
+		String internalName = in.substring(in.indexOf("<") + 1, in.lastIndexOf(">"));//Ex: Ljava/util/List<Ljava/lang/String;>; = Ljava/lang/String;
+		if (internalName.startsWith("L") && internalName.endsWith(";")) {//Ex: Ljava/lang/String; //Second sanity check
+			internalName = internalName.substring(1, internalName.indexOf(";"));//Ex: java/lang/String
+		} else {
+			return in;
+		}
+		final String newClassName = getClass(internalName);
+		String newInternalName = internalName = in.replace(internalName, newClassName);
+
+		String excess = newInternalName.substring(newInternalName.indexOf("<") + 1, newInternalName.lastIndexOf(">"));
+		if (excess.contains("L" + newClassName + ";")) {
+			String newExcess = excess.replace("L" + newClassName + ";", "");
+			if (newExcess.startsWith("L") && newExcess.endsWith(";")) {
+				newExcess = newExcess.substring(1, newExcess.lastIndexOf(";"));
+				newInternalName = newInternalName.replace(newExcess, getClass(newExcess));
+			}
+		}
+		if (!newInternalName.equals(in)) {
+			return newInternalName;
+		}
+		return in;
+	}
 }
