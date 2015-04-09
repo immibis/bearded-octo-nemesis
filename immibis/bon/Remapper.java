@@ -243,7 +243,9 @@ public class Remapper {
 				if(mn.localVariables != null)
 					for(LocalVariableNode lvn : mn.localVariables)
 						lvn.desc = m.mapTypeDescriptor(lvn.desc);
-						lvn.signature = m.mapTypeSignature(lvn.signature);
+						if (lvn.signature != null) {
+							lvn.signature = m.mapTypeSignature(lvn.signature);
+						}
 			}
 			
 			for(FieldNode fn : cn.fields) {
