@@ -118,4 +118,19 @@ public class Mapping {
 			return "L" + getClass(in.substring(1, in.length() - 1)) + ";";
 		return in;
 	}
+	
+	public String mapTypeSignature(String in) {
+		if (!in.contains("<") || !in.contains(">")) {
+			return in;
+		}
+		String internalName = in.substring(in.indexOf("<") + 1, in.lastIndexOf(">"));
+		if (internalName.startsWith("L") && internalName.endsWith(";")) {
+			internalName = internalName.substring(1, internalName.indexOf(";"));
+		}
+		internalName = in.replace(internalName, getClass(internalName));
+		if (!internalName.equals(in)) {
+			return internalName;
+		}
+		return in;
+	}
 }
