@@ -120,7 +120,7 @@ public class Mapping {
 	}
 	
 	public String mapTypeSignature(String in) {
-		//TODO
-		return in;
+		String internalName = in.substring(in.firstIndexOf("<") + 1, in.lastIndexOf(">"));
+		return in.replace(internalName, getClass(internalName));
 	}
 }
