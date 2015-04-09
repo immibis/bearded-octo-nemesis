@@ -241,32 +241,36 @@ public class Remapper {
 				}
 				
 				if(mn.localVariables != null)
-					for(LocalVariableNode lvn : mn.localVariables)
+					for(LocalVariableNode lvn : mn.localVariables) {
 						lvn.desc = m.mapTypeDescriptor(lvn.desc);
-				
-				// TODO: support signatures (for generics, even though Minecraft doesn't use them after obfuscation)
+						if (lvn.signature != null) {
+							lvn.signature = m.mapTypeSignature(lvn.signature);
+						}
+					}
 			}
 			
 			for(FieldNode fn : cn.fields) {
 				fn.name = m.getField(cn.name, fn.name);
 				fn.desc = m.mapTypeDescriptor(fn.desc);
+				if (fn.signature != null) {
+					fn.signature = m.mapTypeSignature(fn.signature);
+				}
 				
 				processAnnotationList(m, fn.invisibleAnnotations);
 				processAnnotationList(m, fn.visibleAnnotations);
-				
-				// TODO: support signatures (for generics, even though Minecraft doesn't use them after obfuscation)
 			}
 			
 			cn.name = m.getClass(cn.name);
 			cn.superName = m.getClass(cn.superName);
+			if (cn.signature != null) {
+				cn.signature = m.mapTypeSignature(cn.signature);
+			}
 			
 			for(int k = 0; k < cn.interfaces.size(); k++)
 				cn.interfaces.set(k, m.getClass(cn.interfaces.get(k)));
 			
 			processAnnotationList(m, cn.invisibleAnnotations);
 			processAnnotationList(m, cn.visibleAnnotations);
-			
-			// TODO: support signatures (for generics, even though Minecraft doesn't use them after obfuscation)
 			
 			for(InnerClassNode icn : cn.innerClasses) {
 				icn.name = m.getClass(icn.name);
