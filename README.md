@@ -1,4 +1,6 @@
-MAIN DOWNLOAD: http://dl.dropbox.com/u/2944265/mods/BON.jar
+# This prject is unmaintained,old,tedious to use and does not support 1.12.2 and above use: [https://github.com/aaronschneider7797/BON2-Patched](BON2)
+
+## MAIN DOWNLOAD:[http://dl.dropbox.com/u/2944265/mods/BON.jar](https://web.archive.org/web/20170924093158/http://dl.dropbox.com/u/2944265/mods/BON.jar)
 
 You must install Forge (if necessary) and recompile before using BON to deobfuscate a mod.
 
