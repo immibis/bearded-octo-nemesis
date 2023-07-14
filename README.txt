@@ -1,4 +1,4 @@
-MAIN DOWNLOAD: http://dl.dropbox.com/u/2944265/mods/BON.jar
+MAIN DOWNLOAD: https://immibis.com/dropbox-migrate/mods/BON.jar
 
 You must install Forge (if necessary) and recompile before using BON to deobfuscate a mod.
 
